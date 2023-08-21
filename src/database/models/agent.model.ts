@@ -3,29 +3,29 @@ import { sequelize } from '../db.connection';
 import { Booking } from './booking.model';
 
 
-interface UserInterface {
+interface AgentInterface {
     id: IntegerDataType;
     name: string;
     email: string;
     password: string;
     dob:Date;
     phone: string;
-    address: string
 
 }
 
-class User extends Model<UserInterface> implements UserInterface {
+
+class Agent extends Model<AgentInterface> implements AgentInterface {
     public id!: IntegerDataType;
     public name!: string;
     public email!: string;
     public password!: string;
     public dob!: Date;
     public phone!: string;
-    public address!: string;
+
 }
 
 
-User.init(
+Agent.init(
     {
         id: {
             type: DataTypes.INTEGER,
@@ -51,19 +51,16 @@ User.init(
         phone: {
             type: DataTypes.STRING,
             allowNull: false,
-        },
-        address: {
-            type: DataTypes.STRING,
-            allowNull: true,
         }
     },
     {
         sequelize: sequelize,
-        tableName: 'users',
+        tableName: 'agents',
         timestamps: false,
     }
 );
 
 
+// Agent.hasOne(Booking, { foreignKey: 'agent_id' });
 
-export {User}
+export {Agent}

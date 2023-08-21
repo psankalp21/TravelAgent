@@ -7,4 +7,3 @@ NodeJS Project
 Framework used : Hapi
 Written in : Typescript
 
-

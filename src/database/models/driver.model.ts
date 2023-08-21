@@ -1,31 +1,26 @@
 import { DataTypes, IntegerDataType, Model, Optional } from 'sequelize'
 import { sequelize } from '../db.connection';
-import { Booking } from './booking.model';
 
 
-interface UserInterface {
+interface DriverInterface {
     id: IntegerDataType;
     name: string;
-    email: string;
-    password: string;
-    dob:Date;
+    dob:string;
     phone: string;
-    address: string
+    available: boolean
 
 }
 
-class User extends Model<UserInterface> implements UserInterface {
+class Driver extends Model<DriverInterface> implements DriverInterface {
     public id!: IntegerDataType;
     public name!: string;
-    public email!: string;
-    public password!: string;
-    public dob!: Date;
+    public dob!: string;
     public phone!: string;
-    public address!: string;
+    public available!: boolean
 }
 
 
-User.init(
+Driver.init(
     {
         id: {
             type: DataTypes.INTEGER,
@@ -36,34 +31,26 @@ User.init(
             type: DataTypes.STRING,
             allowNull: false
         },
-        email: {
-            type: DataTypes.STRING,
-            unique: true
-        },
-        password: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
         dob: {
-            type: DataTypes.DATEONLY,
+            type: DataTypes.STRING,
             allowNull: false,
         },
         phone: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        address: {
-            type: DataTypes.STRING,
-            allowNull: true,
+        available:{
+            type: DataTypes.BOOLEAN,
+            allowNull: true
         }
     },
     {
         sequelize: sequelize,
-        tableName: 'users',
+        tableName: 'drivers',
         timestamps: false,
     }
 );
 
 
 
-export {User}
+export {Driver}
