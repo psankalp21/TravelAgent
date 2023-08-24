@@ -1,6 +1,7 @@
 import { ServerRoute } from "@hapi/hapi"
 import Joi from "joi"
 import {user_signup_controller,agent_signup_controller,agent_login_controller,user_login_controller,user_forgot_password_controller,user_verify_otp} from '../controllers'
+
 const authroutes: ServerRoute[] = [
   {
     method: 'POST',
@@ -9,11 +10,10 @@ const authroutes: ServerRoute[] = [
     options: {
       tags: ['api','userauth'],
       description:" New users can easily register within the system by providing required information",
-
       validate: {
         payload: Joi.object({
           name: Joi.string().required(),
-          email: Joi.string().required(),
+          email: Joi.string().email().required(),
           password: Joi.string().required(),
           dob: Joi.date().required(),
           phone: Joi.string().required(),
@@ -24,6 +24,7 @@ const authroutes: ServerRoute[] = [
       }
     }
   },
+  
   {
     method: 'POST',
     path: '/agentsignup',
@@ -34,7 +35,7 @@ const authroutes: ServerRoute[] = [
       validate: {
         payload: Joi.object({
           name: Joi.string().required(),
-          email: Joi.string().required(),
+          email: Joi.string().email().required(),
           password: Joi.string().required(),
           dob: Joi.date().required(),
           phone: Joi.string().required(),
@@ -55,7 +56,7 @@ const authroutes: ServerRoute[] = [
 
       validate: {
         payload: Joi.object({
-          email: Joi.string().required(),
+          email: Joi.string().email().required(),
           password: Joi.string().required()
         }),
         options: {
@@ -72,7 +73,7 @@ const authroutes: ServerRoute[] = [
       description:"Registered users can securely log in to the system using their credentials",
       validate: {
         payload: Joi.object({
-          email: Joi.string().required(),
+          email: Joi.string().email().required(),
           password: Joi.string().required()
         }),
         options: {
@@ -90,16 +91,16 @@ const authroutes: ServerRoute[] = [
       description:"Incase user has forgotten his password he can request for password reset with his email",
       validate: {
         query: Joi.object({
-          email: Joi.string().required(),
+          email: Joi.string().email().required(),
         }),
         options: {
           allowUnknown: true,
           security: [{ apiKey: [] }]
-
         }
       }
     }
   },
+
   {
     method: 'PATCH',
     path: '/verify_otp',
@@ -109,9 +110,9 @@ const authroutes: ServerRoute[] = [
       description:"User can enter the OTP recieved for verification and then update his password",
       validate: {
         payload: Joi.object({
-          email: Joi.string().required(),
-          OTP: Joi.number().required(),
-          new_passowrd: Joi.string().required(),
+          email: Joi.string().email().required(),
+          otp: Joi.number().required(),
+          new_password: Joi.string().required(),
         }),
         options: {
           allowUnknown: true

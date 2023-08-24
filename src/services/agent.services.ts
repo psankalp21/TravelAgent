@@ -1,8 +1,6 @@
 import { addDriver, getDrivers, ifDriverPhoneExists, remDriver } from "../entities/driver.entity";
 import { ifTaxiNumberExists, addTaxi, getTaxi, remTaxi, get_taxi_status, set_taxi_status } from "../entities/taxi.entity";
 import { assign_driver, get_all_bookings, get_pending_bookings, ifDriverAvailable } from "../entities/bookings.entity";
-import { Driver } from "../database/models/driver.model";
-import { Booking } from "../database/models/booking.model";
 import { createClient } from "redis";
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));

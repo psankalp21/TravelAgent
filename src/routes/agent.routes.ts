@@ -210,26 +210,7 @@ const agentRoutes: ServerRoute[] = [
         }
       }
     }
-  },
-  // {
-  //   method: 'GET',
-  //   path: '/getAvaialableDrivers',
-  //   handler: driver_managment_controller.get_avaiable_driver,
-  //   options: {
-  //     pre: [{ method: admin_jwtMiddleware }],
-  //     tags: ['api', 'agent'],
-  //     description:"Agents can get list of drivers who are available for that booking slot",
-  //     validate: {
-  //       query: Joi.object({
-  //         booking_id: Joi.number().required(),
-  //       }),
-  //       options: {
-  //         allowUnknown: true,
-  //         security: [{ apiKey: [] }]
-  //       }
-  //     }
-  //   }
-  // }
+  }
 ]
 
 export default agentRoutes

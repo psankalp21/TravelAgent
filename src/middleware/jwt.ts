@@ -4,7 +4,6 @@ import Jwt from 'jsonwebtoken';
 import { createClient } from 'redis';
 import { is_session_active } from '../entities/session.entity';
 const secretKey = 'PS21';
-
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
@@ -60,7 +59,6 @@ export const admin_jwtMiddleware = async (request: Request, h: ResponseToolkit) 
     if (decodedToken.type == 'admin') {
         const key = `${decodedToken.aid}_${ipAddress}`;
         const s = await client.hGet(key, "session")
-        console.log(s)
         if (s == "active")
             return h.continue;
         else if (s == "not active")
@@ -71,7 +69,7 @@ export const admin_jwtMiddleware = async (request: Request, h: ResponseToolkit) 
                 case 1: return h.continue;
                 case 2: throw Boom.unauthorized('Session Expired');
                 case 3: throw Boom.unauthorized('You are logged out');
-                case 0: throw Boom.unauthorized('Session doesnot exists');
+                case 0: throw Boom.unauthorized('Session does not exists');
             }
         }
     }

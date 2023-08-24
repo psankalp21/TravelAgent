@@ -33,49 +33,34 @@ export class booking_managment {
                 ],
             },
         };
-
-        try {
-            const response = await axios.request(options);
-
-            const data_res = response.data.route.car;
-            const distance = parseFloat(data_res.distance).toFixed(1);
-            const drn = parseFloat(data_res.duration).toFixed(1);
-            const duration = ((data_res.drn) / 3600).toString();
-
-            if (distance == "0")
-                throw Boom.badRequest('Invalid Source or Destination');
-            const user = await addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
-            return user;
-        }
-        catch (error) {
-            console.error(error);
-            throw Boom.internal("An internal error occurred");
-        }
+        const response = await axios.request(options);
+        const data_res = response.data.route.car;
+        const distance = parseFloat(data_res.distance).toFixed(1);
+        const drn = parseFloat(data_res.duration).toFixed(1);
+        const duration = ((data_res.drn) / 3600).toString();
+        if (distance == "0")
+            throw Boom.badRequest('Invalid Source or Destination');
+        const user = await addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
+        return user;
     }
+
     static async cancel_booking(user_id, booking_id) {
-        try {
-            const user = await remBooking(user_id, booking_id);
-            return user;
-        } catch (error) {
-            console.error(error);
-            throw Boom.badRequest("Failed to cancel booking");
-        }
+        const user = await remBooking(user_id, booking_id);
+        return user;
+
     }
 
     static async start_journey(booking_id) {
-        try {
-            const journey = await getJourneyStatus(booking_id);
-            if (journey === null)
-                return 0
-            else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'ongoing') {
-                return 1
-            }
-            await startJourney(booking_id);
-            return 2;
-        } catch (error) {
-            console.error(error);
-            throw Boom.internal("An internal error occurred while starting the journey");
+
+        const journey = await getJourneyStatus(booking_id);
+        if (journey === null)
+            return 0
+        else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'ongoing') {
+            return 1
         }
+        await startJourney(booking_id);
+        return 2;
+
     }
 
     static async end_journey(booking_id: number) {
