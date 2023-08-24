@@ -17,7 +17,7 @@ export class booking_managment {
             params: { car: 'true' },
             headers: {
                 'content-type': 'application/json',
-                'X-RapidAPI-Key': 'b9caf1cca2msh9228a609241864fp18a502jsne626318a2d92',
+                'X-RapidAPI-Key': 'Replace with key',
                 'X-RapidAPI-Host': 'distanceto.p.rapidapi.com',
             },
             data: {
