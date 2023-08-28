@@ -1,14 +1,12 @@
 import { Driver } from "../database/models/driver.model"
+import Boom from "boom";
 
 export async function ifDriverPhoneExists(phone: string) {
-    const user = await Driver.findOne({ where: { phone } })
-    if (user)
-        return true
-    else
-        return false
+    const driver = await Driver.findOne({ where: { phone } })
+    return driver
 }
 
-export async function addDriver(name:string,dob:string,phone:string,available:boolean) {
+export async function addDriver(name: string, dob: string, phone: string, available: boolean) {
     try {
         const user = await Driver.create({
             name,
@@ -24,29 +22,17 @@ export async function addDriver(name:string,dob:string,phone:string,available:bo
 }
 
 export async function getDrivers() {
-    try {
-        const driver = await Driver.findAll();
-        return driver
-    } catch (error) {
-        console.error(error);
-        throw new Error("Failed to get driver details");
-    }
+    const driver = await Driver.findAll();
+    return driver
+
 }
 
 export async function remDriver(driver_id) {
-    try {
-        const driver = await Driver.findOne({ where: { id:driver_id } });
-        if(driver)
-        {
-            driver.destroy();
-            return 1
-        }
-        else 
-            return 0
-    } catch (error) {
-        console.error(error);
-        throw new Error("Failed to remove driver details");
-    }
+    const driver = await Driver.findOne({ where: { id: driver_id } });
+    if (!driver)
+        return null
+    driver.destroy();
+    return driver;
 }
 
 

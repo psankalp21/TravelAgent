@@ -31,18 +31,11 @@ export async function addTaxi(id: string, model: string, category: string, capac
 
 
 export async function remTaxi(id) {
-    try {
-        const taxi = await Taxi.findOne({ where: { id: id } });
-        if (taxi) {
-            taxi.destroy();
-            return 1
-        }
-        else
-            return 0
-    } catch (error) {
-        console.error(error);
-        throw new Error(error);
-    }
+    const taxi = await Taxi.findOne({ where: { id: id } });
+    if (!taxi)
+        throw Boom.notFound('Taxi not found', { errorCode: 'TAXI_NOT_FOUND' });
+    taxi.destroy();
+    return
 }
 
 
@@ -54,8 +47,6 @@ export async function getTaxi() {
         console.error(error);
         throw new Error(error);
     }
-
-    
 }
 
 
@@ -85,7 +76,7 @@ export async function filterTaxibyCapacity(capacity, fuel_type, journey_date) {
                 fuel_type: fuel_type,
             },
         });
-    
+
         return availableTaxis;
     } catch (error) {
         console.error(error);
@@ -128,27 +119,14 @@ export async function filterTaxibyCategory(category, fuel_type, journey_date) {
 }
 
 export async function get_taxi_status(id) {
-    try {
-        const taxi = await Taxi.findOne({ where: { id: id } });
-        if (taxi)
-            return taxi.available
-        else
-            return null
-    } catch (error) {
-        console.error(error);
-        throw new Error(error);
-    }
+    const taxi = await Taxi.findOne({ where: { id: id } });
+    if (!taxi)
+        throw Boom.notFound('Taxi not found', { errorCode: 'TAXI_NOT_FOUND' });
+    return taxi.available
 }
 
-
 export async function set_taxi_status(id, status) {
-    try {
-        const taxi = await Taxi.findOne({ where: { id: id } });
-        taxi.available = status
-        taxi.save();
-
-    } catch (error) {
-        console.error(error);
-        throw new Error(error);
-    }
+    const taxi = await Taxi.findOne({ where: { id: id } });
+    taxi.available = status
+    taxi.save();
 }

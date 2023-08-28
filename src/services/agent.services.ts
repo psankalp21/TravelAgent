@@ -1,164 +1,100 @@
-import { addDriver, getDrivers, ifDriverPhoneExists, remDriver } from "../entities/driver.entity";
 import { ifTaxiNumberExists, addTaxi, getTaxi, remTaxi, get_taxi_status, set_taxi_status } from "../entities/taxi.entity";
 import { assign_driver, get_all_bookings, get_pending_bookings, ifDriverAvailable } from "../entities/bookings.entity";
 import { createClient } from "redis";
+
+import Boom from "boom";
+import { DriverE } from "../entities/driver.base";
+import { TaxiE } from "../entities/taxi.base";
+import { Taxi } from "../database/models/taxi.model";
+import { BookingE } from "../entities/booking.base";
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 
 export class driver_managment {
     static async registerDriver(name: string, dob: string, phone: string, available: boolean) {
-        try {
-            const driver: any = await ifDriverPhoneExists(phone);
-            if (driver == false) {
-                const user = await addDriver(name, dob, phone, available);
-                return 1;
-            }
-            else
-                return 0;
-
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to register driver");
-        }
+        const driver = await DriverE.ifPhoneExists(phone);
+        console.log(driver)
+        if (driver)
+            throw Boom.conflict('Phone number already associated with a driver', { errorCode: 'PHONE_EXISTS' });
+        await DriverE.addDriver(name, dob, phone, available)
+        return
     }
 
     static async fetchDrivers() {
-        try {
-            const driver = await getDrivers();
-            return driver
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to fetch drivers");
-        }
+        const driver = await DriverE.fetchDrivers();
+        if (driver.length == 0)
+            throw Boom.notFound('No driver available in database', { errorCode: 'NO_DRIVER_DATA' });
+        return driver
     }
 
-    // static async get_available_drivers(booking_id:number) {
-    //     try {
-    //         const drivers = await getAvailableDrivers(booking_id)
-    //         return drivers;
-    //     }
-    //     catch (error) {
-    //         console.error(error);
-    //         throw new Error(error);
-    //     }
-    // }
     static async removeDrivers(driver_id) {
-        try {
-            const driver = await remDriver(driver_id);
-            return driver
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to remove driver");
-        }
+        const driver = await DriverE.removeDriver(driver_id);
+        if (!driver)
+            throw Boom.notFound('No such driver', { errorCode: 'DRIVER_NOT_FOUND' });
+        return driver
     }
 }
 
-
 export class taxi_managment {
-    static async addNewTaxi(id: string, model: string, category: string, capacity: number, fuel_type: string, available: boolean) {
-        try {
-            const taxi: any = await ifTaxiNumberExists(id);
-            if (taxi == false) {
-                const user = await addTaxi(id, model, category, capacity, fuel_type, available);
-                return 1;
-            }
-            else
-                return 2;
-
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to register a new taxi");
-        }
+    static async addNewTaxi(id: string, model: string, category: string, capacity: number, fuel_type: string) {
+        const taxi = await TaxiE.ifTaxiIdExists(id);
+        if (taxi)
+            throw Boom.conflict('This taxi already exists', { errorCode: 'TAXI_EXISTS' });
+        return await TaxiE.addTaxi(id, model, category, capacity, fuel_type);
     }
+
     static async fetchTaxis() {
-        try {
-            const taxi = await getTaxi();
-            return taxi
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to fetch taxi");
-        }
+        const taxi = await TaxiE.fetchTaxis();
+        return taxi
     }
 
     static async removeTaxi(taxi_id) {
-        try {
-            const taxi = await remTaxi(taxi_id);
-            return taxi
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to remove taxi");
-        }
+        console.log("taxi_iddddd",taxi_id)
+        const taxi = await TaxiE.removeTaxi(taxi_id);
+        return taxi
     }
+
     static async toggle_taxi_status(taxi_id) {
-        try {
-            const taxi_status = await get_taxi_status(taxi_id);
-            if (taxi_status == true) {
-                await set_taxi_status(taxi_id, false)
-                return 1
-            }
-            else if(taxi_status==false)
-            {
-                await set_taxi_status(taxi_id, true)
-                return 2
-            }
-            else
-                return 0
+        const taxi_status = await TaxiE.getTaxiStatus(taxi_id);
+        console.log("tx == ",taxi_status)
+        if (taxi_status == true) {
+            await TaxiE.updateTaxiStatus(taxi_id, false)
+            return 1
         }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to update taxi status");
+        else if (taxi_status == false) {
+            await TaxiE.updateTaxiStatus(taxi_id, true)
+            return 2
         }
     }
-
 }
-
 
 export class agent_booking_services {
     static async acceptBooking(agent_id, booking_id, driver_id) {
-        const isAvailable = await ifDriverAvailable(booking_id, driver_id)
-        if(isAvailable==true)
-        {
-            const booking = await assign_driver(agent_id, booking_id, driver_id)
-            return 1
-        }
-        else
-            return 2
-        
+        await BookingE.ifDriverAvailable(booking_id, driver_id)
+        await BookingE.assignDriver(agent_id, booking_id, driver_id)
+        return
     }
 
     static async getPendingBookings() {
-        const booking = await get_pending_bookings()
+        const booking = await BookingE.getPendingBookings()
         return booking
     }
 
     static async getAllBookings() {
-        const booking = await get_all_bookings()
+        const booking = await BookingE.getAllBookings()
         return booking
     }
 }
 
 export class logout_service {
-   
     static async agent_logout(agent_id, ip) {
-        try {
-            const key = `${agent_id}_${ip}`;
-            await client.hSet(key, {
-                'agent_id': `${agent_id}`,
-                'ip_address': `${ip}`,
-                'session': 'inactive'
-            });
-            return 1
-        }
-        catch (error) {
-            console.error(error);
-            throw new Error("Failed to logout");
-        }
+        const key = `${agent_id}_${ip}`;
+        await client.hSet(key, {
+            'agent_id': `${agent_id}`,
+            'ip_address': `${ip}`,
+            'session': 'inactive'
+        });
+        return
     }
 }

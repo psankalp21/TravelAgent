@@ -4,6 +4,7 @@ import Boom from "boom";
 import axios from "axios";
 import { createClient } from "redis";
 import Session from "../database/models/session.model";
+import { BookingE } from "../entities/booking.base";
 
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
@@ -17,7 +18,7 @@ export class booking_managment {
             params: { car: 'true' },
             headers: {
                 'content-type': 'application/json',
-                'X-RapidAPI-Key': 'Replace with key',
+                'X-RapidAPI-Key': 'b9caf1cca2msh9228a609241864fp18a502jsne626318a2d92',
                 'X-RapidAPI-Host': 'distanceto.p.rapidapi.com',
             },
             data: {
@@ -36,71 +37,56 @@ export class booking_managment {
         const response = await axios.request(options);
         const data_res = response.data.route.car;
         const distance = parseFloat(data_res.distance).toFixed(1);
-        const drn = parseFloat(data_res.duration).toFixed(1);
-        const duration = ((data_res.drn) / 3600).toString();
+        const drn = parseFloat((data_res.duration).toFixed(1));
+        const duration = drn / 3600;
         if (distance == "0")
             throw Boom.badRequest('Invalid Source or Destination');
-        const user = await addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
-        return user;
+        const user = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
+        return
     }
 
     static async cancel_booking(user_id, booking_id) {
-        const user = await remBooking(user_id, booking_id);
-        return user;
-
+        const user = await BookingE.removeBooking(booking_id,user_id);
+        return
     }
 
     static async start_journey(booking_id) {
 
-        const journey = await getJourneyStatus(booking_id);
-        if (journey === null)
-            return 0
-        else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'ongoing') {
-            return 1
-        }
-        await startJourney(booking_id);
-        return 2;
+        const journey = await BookingE.getJourneyStatus(booking_id);
+        console.log(journey)
+        if (!journey)
+            throw Boom.notFound("Journey Not Found")
+        else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'ongoing' || journey.journey_status === null)
+            throw Boom.badRequest("Invalid Action")
+
+        await BookingE.startJourney(booking_id);
+        return;
 
     }
 
     static async end_journey(booking_id: number) {
-        try {
-            const journey = await getJourneyStatus(booking_id);
-            console.log(journey);
-
-            if (journey === null) {
-                return 0
-            } else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'scheduled') {
-                return 1
-            }
-
-            return 2;
-        } catch (error) {
-            console.error("Error in end_journey:", error);
-            throw Boom.internal("An internal error occurred while ending the journey");
-        }
+        const journey = await BookingE.getJourneyStatus(booking_id);
+        console.log(journey);
+        if (!journey)
+            throw Boom.notFound("Journey Not Found")
+        else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'scheduled' || journey.journey_status === null)
+            throw Boom.badRequest("Invalid Action")
+        return;
     }
 
     static async view_bookings(user_id) {
-        try {
-            const user = await viewBookings(user_id);
-            return user;
-        }
-        catch (error) {
-            console.error(error);
-            throw Boom.internal("An internal error occurred");
-        }
+        const user = await BookingE.UserFetchBookings(user_id);
+        if (!user)
+            throw Boom.notFound("No bookings found");
+        return user;
+
     }
 
     static async get_booking(booking_id) {
-        try {
-            const booking = await get_booking(booking_id);
-            return booking;
-        }
-        catch (error) {
-            console.error(error);
-            throw Boom.internal("An internal error occurred");
-        }
+        const booking = await BookingE.FetchBookingByID(booking_id);
+        if (!booking)
+            throw Boom.notFound("Booking not found");
+        return booking;
     }
 }
 

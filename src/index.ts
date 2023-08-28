@@ -14,6 +14,7 @@ import hapiswagger from 'hapi-swagger';
 import inert from '@hapi/inert';
 import vision from '@hapi/vision'
 import Session from './database/models/session.model';
+import errorHandlingMiddleware from './middleware/errorhandle'; // Adjust the path
 // import { user_forgot_password_controller, user_login_controller, user_signup_controller, user_verify_otp } from './controllers/auth.controller';
 
 
@@ -53,6 +54,12 @@ const init = async () => {
           { name: 'user', description: 'User based APIS' },
         ],
       }
+    },
+    {
+      plugin: {
+        name: 'errorHandlingPlugin',
+        register: errorHandlingMiddleware, 
+      },
     },
   ]);
 
