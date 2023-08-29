@@ -1,17 +1,16 @@
-import { addBooking, endJourney, get_booking, startJourney, viewBookings, getJourneyStatus, remBooking } from "../entities/bookings.entity";
-import { filterTaxibyCapacity, filterTaxibyCategory } from "../entities/taxi.entity";
+import { filterTaxibyCapacity, filterTaxibyCategory } from "../entities/filter.entity";
 import Boom from "boom";
 import axios from "axios";
 import { createClient } from "redis";
 import Session from "../database/models/session.model";
-import { BookingE } from "../entities/booking.base";
+import { BookingE } from "../entities/booking.entity";
 
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 
 export class booking_managment {
-    static async add_booking(user_id: number, source: string, destination: string, taxi_id: string, journey_date: string, journey_time: string) {
+    static async add_booking(user_id: number, source: string, destination: string, taxi_id: string, journey_date: Date, journey_time: string) {
         const options = {
             method: 'POST',
             url: 'https://distanceto.p.rapidapi.com/distance/route',
@@ -41,24 +40,25 @@ export class booking_managment {
         const duration = drn / 3600;
         if (distance == "0")
             throw Boom.badRequest('Invalid Source or Destination');
+        const checkBooking = await BookingE.fetchBookingAvailability(taxi_id, journey_date)
+        if (checkBooking)
+            throw Boom.badRequest(`Taxi not avaiable for ${journey_date}`);
         const user = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
         return
     }
 
     static async cancel_booking(user_id, booking_id) {
-        const user = await BookingE.removeBooking(booking_id,user_id);
+        const user = await BookingE.removeBooking(booking_id, user_id);
         return
     }
 
     static async start_journey(booking_id) {
-
         const journey = await BookingE.getJourneyStatus(booking_id);
         console.log(journey)
         if (!journey)
             throw Boom.notFound("Journey Not Found")
         else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'ongoing' || journey.journey_status === null)
             throw Boom.badRequest("Invalid Action")
-
         await BookingE.startJourney(booking_id);
         return;
 
@@ -79,7 +79,6 @@ export class booking_managment {
         if (!user)
             throw Boom.notFound("No bookings found");
         return user;
-
     }
 
     static async get_booking(booking_id) {
@@ -95,11 +94,8 @@ export class user_taxi_service {
         try {
             if (capacity == null)
                 return await filterTaxibyCategory(category, fuel_type, fuel_type)
-
             else if (category == null)
                 return await filterTaxibyCapacity(capacity, fuel_type, journey_date)
-
-
         }
         catch (error) {
             console.error(error);
@@ -107,8 +103,6 @@ export class user_taxi_service {
         }
     }
 }
-
-
 export class logout_service {
     static async user_logout(user_id, ip) {
         try {

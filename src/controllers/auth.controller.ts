@@ -6,25 +6,53 @@ const PORT = process.env.PORT || 4000;
 
 export async function agent_signup_controller(request: Request, h: ResponseToolkit) {
     const { name, email, password, dob, phone } = <any>request.payload;
-    await signup_service.agent_signup(name, email, password, dob, phone);
-    return h.response({
-        "Message": "Signup Success!",
-        "Action": `please login: http://localhost:${PORT}/agentlogin`
-    }).code(201);
+    const qr = await signup_service.agent_signup(name, email, password, dob, phone);
+    return h.response(qr).code(201);
 }
 
 export async function user_signup_controller(request: Request, h: ResponseToolkit) {
     const { name, email, password, dob, phone } = <any>request.payload;
     const signup = new signup_service();
-    await signup.user_signup(name, email, password, dob, phone);
-    return h.response({ "Message:": "User Signup Successful" }).code(500);
+    const data = await signup.user_signup(name, email, password, dob, phone);
+    return h.response(data).code(500);
 }
 
 export async function agent_login_controller(request: Request, h: ResponseToolkit) {
-    const ipAddress = request.info.remoteAddress;
-    const { email, password } = <any>request.payload;
+    const { email, password, method} = <any>request.payload;
     const login = new login_service();
-    const result = await login.AgentLogin(ipAddress, email, password);
+    const result = await login.AgentLogin(email, password,method);
+    return h.response({
+        "Message": "Login Success, OTP Generated"
+    }).code(200);
+}
+
+export async function agent_login_verification(request: Request, h: ResponseToolkit) {
+    const ipAddress = request.info.remoteAddress;
+    const { email,OTP } = <any>request.payload;
+    const login = new login_service();
+    const result = await login.AgentLogin_verification(ipAddress,email,OTP);
+    return h.response({
+        "Message": "Login Success",
+        "Token": result
+    }).code(200);
+}
+
+export async function user_login_controller(request: Request, h: ResponseToolkit) {
+    const { email, password,method } = <any>request.payload;
+    const login = new login_service();
+    const result = await login.Userlogin(email, password,method);
+    return h.response({
+        "Message": "Login Success, OTP Generated",
+    }).code(200);
+}
+
+
+
+export async function user_login_verification(request: Request, h: ResponseToolkit) {
+    const ipAddress = request.info.remoteAddress;
+    const { email,OTP } = <any>request.payload;
+    const login = new login_service();
+    const result = await login.UserLogin_verification(ipAddress,email,OTP);
     return h.response({
         "Message": "Login Success",
         "Token": result
@@ -32,18 +60,6 @@ export async function agent_login_controller(request: Request, h: ResponseToolki
 
 
 }
-
-export async function user_login_controller(request: Request, h: ResponseToolkit) {
-    const { email, password } = <any>request.payload;
-    const ipAddress = request.info.remoteAddress;
-    const login = new login_service();
-    const result = await login.Userlogin(ipAddress, email, password);
-    return h.response({
-        "Message": "Login Success",
-        "Token": result
-    }).code(200);
-}
-
 
 export async function user_forgot_password_controller(request: Request, h: ResponseToolkit) {
     const { email } = <any>request.query;

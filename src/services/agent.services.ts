@@ -1,12 +1,14 @@
-import { ifTaxiNumberExists, addTaxi, getTaxi, remTaxi, get_taxi_status, set_taxi_status } from "../entities/taxi.entity";
-import { assign_driver, get_all_bookings, get_pending_bookings, ifDriverAvailable } from "../entities/bookings.entity";
 import { createClient } from "redis";
-
 import Boom from "boom";
-import { DriverE } from "../entities/driver.base";
-import { TaxiE } from "../entities/taxi.base";
-import { Taxi } from "../database/models/taxi.model";
-import { BookingE } from "../entities/booking.base";
+import { DriverE } from "../entities/driver.entity";
+import { TaxiE } from "../entities/taxi.entity";
+import amqp from 'amqplib';
+import { BookingE } from "../entities/booking.entity";
+import { User } from "../database/models/user.model";
+import { Agent } from "../database/models/agent.model";
+import { Booking } from "../database/models/booking.model";
+import { UserE } from "../entities/user.entity";
+import { AgentE } from "../entities/agent.entity";
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
@@ -50,14 +52,13 @@ export class taxi_managment {
     }
 
     static async removeTaxi(taxi_id) {
-        console.log("taxi_iddddd",taxi_id)
+        console.log("taxi_iddddd", taxi_id)
         const taxi = await TaxiE.removeTaxi(taxi_id);
         return taxi
     }
 
     static async toggle_taxi_status(taxi_id) {
         const taxi_status = await TaxiE.getTaxiStatus(taxi_id);
-        console.log("tx == ",taxi_status)
         if (taxi_status == true) {
             await TaxiE.updateTaxiStatus(taxi_id, false)
             return 1
@@ -71,18 +72,54 @@ export class taxi_managment {
 
 export class agent_booking_services {
     static async acceptBooking(agent_id, booking_id, driver_id) {
+        const booking = await BookingE.FetchBookingByID(booking_id)
+        if (!booking)
+            throw Boom.notFound('Booking not found', { errorCode: 'BOOKING_NOT_FOUND' });
+
+        const user = await UserE.fetchUserById(booking.user_id)
+        const driver = await DriverE.fetchDriverById(driver_id)
+        const agent = await AgentE.fetchAgentById(agent_id)
+
         await BookingE.ifDriverAvailable(booking_id, driver_id)
-        await BookingE.assignDriver(agent_id, booking_id, driver_id)
+        await BookingE.assignDriver(booking_id, agent_id, driver_id)
+
+        const connection = await amqp.connect('amqp://localhost');
+        const channel = await connection.createChannel();
+        const queueName = 'booking_queue';
+        await channel.assertQueue(queueName, { durable: true });
+
+        const bookingData = {
+            email: user.email,
+            user_name: user.name,
+            source: booking.source,
+            destination: booking.destination,
+            duration: booking.duration,
+            distance: booking.distance,
+            driver: driver.name,
+            expected_fare: parseFloat(booking.distance) * 20,
+            agent_name: agent.name,
+            journey_status: "scheduled",
+            booking_status: "accepted",
+        };
+    
+        channel.sendToQueue(queueName, Buffer.from(JSON.stringify(bookingData)), { persistent: true });
+
+        await channel.close();
+        await connection.close();
         return
     }
 
     static async getPendingBookings() {
         const booking = await BookingE.getPendingBookings()
+        if (booking.length == 0)
+            throw Boom.notFound('Booking not found', { errorCode: 'BOOKING_NOT_FOUND' });
         return booking
     }
 
     static async getAllBookings() {
         const booking = await BookingE.getAllBookings()
+        if (booking.length == 0)
+            throw Boom.notFound('Booking not found', { errorCode: 'BOOKING_NOT_FOUND' });
         return booking
     }
 }

@@ -11,7 +11,7 @@ interface UserInterface {
     dob:Date;
     phone: string;
     address: string
-
+    twoFA:string
 }
 
 class User extends Model<UserInterface> implements UserInterface {
@@ -22,6 +22,8 @@ class User extends Model<UserInterface> implements UserInterface {
     public dob!: Date;
     public phone!: string;
     public address!: string;
+    public twoFA!: string;
+
 }
 
 
@@ -55,6 +57,11 @@ User.init(
         address: {
             type: DataTypes.STRING,
             allowNull: true,
+        },
+        twoFA:
+        {
+            type: DataTypes.STRING,
+            allowNull: true
         }
     },
     {

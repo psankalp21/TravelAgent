@@ -1,70 +1,52 @@
-import Boom from "boom";
+import BaseEntity from "./base.entity";
 import { User } from "../database/models/user.model";
 
-
-export async function ifUserEmailExists(email: string) {
-    try {
-        const user = await User.findOne({ where: { email } })
-        return user
+class UserEntity extends BaseEntity {
+    constructor() {
+        super(User);
     }
-    catch (error) {
-        console.log(error)
-        throw Boom.internal('An internal server error occurred');
+    async createUser(name, email, password, dob, phone, twoFA) {
+        let payload = { name: name, email: email, password: password, dob: dob, phone: phone, twoFA: twoFA }
+        let data = await this.create(payload)
+        return data;
+    }
+
+    async login(email, password) {
+        let condition = { email: email, password: password }
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+    async ifEmailExists(email) {
+        let condition = { email: email }
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+
+    async ifPhoneExists(phone) {
+        let condition = { phone: phone }
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+    async updatePassword(email, new_password) {
+        let condition = { email: email }
+        let update = { password: new_password }
+        return await this.update(update, condition)
+    }
+
+    async getSecret(email) {
+        let condition = { email: email }
+        let data = await this.findOne(condition)
+        return data
+    }
+
+    async fetchUserById(id) {
+        let condition = { id: id }
+        let data = await this.findOne(condition)
+        return data
     }
 }
 
-export async function ifUserPhoneExists(phone: string) {
-    try {
-        const user = await User.findOne({ where: { phone } })
-        return user
-    }
-    catch (error) {
-        console.log(error)
-        throw Boom.internal('An internal server error occurred');
-    }
-}
-
-export async function addUser(name: string, email: string, password: string, dob: Date, phone: string) {
-    try {
-        const user = await User.create({
-            name,
-            email,
-            password,
-            dob,
-            phone
-        });
-        return user;
-    } catch (error) {
-        console.log(error)
-        throw Boom.internal('An internal server error occurred');
-    }
-}
-
-export async function Userlogin(email: string, password: string) {
-    try {
-        const user = await User.findOne({ where: { email: email, password: password } })
-        return user
-    }
-    catch (error) {
-        console.log(error)
-        throw Boom.internal('An internal server error occurred');
-    }
-}
-
-
-export async function updateUserPassword(email: string, new_password: string) {
-    try
-    {
-        const user = await User.findOne({ where: { email: email } })
-        console.log("USER->->",user)
-        user.password = new_password;
-        user.save();
-        return user
-    }
-    catch (error) {
-        console.log(error)
-        throw Boom.internal('An internal server error occurred');
-    }
-
-    
-}
+export const UserE = new UserEntity();

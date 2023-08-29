@@ -2,9 +2,9 @@ export default class BaseEntity
 {
     protected modelName:any
 
-    constructor(modelname:any){
+    constructor(modelname){
         this.modelName=modelname;}
-
+        
     async findOne(condition)
     {
         return await this.modelName.findOne({where:condition})

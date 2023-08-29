@@ -16,7 +16,6 @@ export class driver_managment_controller {
     static async fetch_driver(request: Request, h: ResponseToolkit) {
         const result = await driver_managment.fetchDrivers();
         return h.response(result).code(201);
-
     }
 
     static async remove_driver(request: Request, h: ResponseToolkit) {

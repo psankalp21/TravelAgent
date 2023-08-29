@@ -1,7 +1,6 @@
 import Session from "../database/models/session.model";
 
 export async function create_session(key, agent_id, ip_addr) {
-    try {
         const now = new Date();
         now.setDate(now.getDate() + 1)
         const session = await Session.create({
@@ -12,29 +11,19 @@ export async function create_session(key, agent_id, ip_addr) {
             expiry: now
         });
         return session;
-    } catch (error) {
-        console.error(error);
-        throw new Error("Failed to create session");
-    }
+
 }
 
 export async function inactive_session(id) {
-    try {
-
         const session = await Session.findByPk(id);
         session.active = 'not active';
         session.save();
         return session;
-    } catch (error) {
-        console.error(error);
-        throw new Error("Something went wrong");
-    }
+
 }
 
 
 export async function update_session(id) {
-    try {
-
         const session = await Session.findByPk(id);
         const now = new Date();
         now.setDate(now.getDate() + 1)
@@ -42,15 +31,11 @@ export async function update_session(id) {
         session.expiry = now;
         session.save();
         return session;
-    } catch (error) {
-        console.error(error);
-        throw new Error("Something went wrong");
-    }
+   
 }
 
 
 export async function is_session_active(id) {
-    try {
         const now = new Date();
         const session = await Session.findByPk(id);
         if (session) {
@@ -64,8 +49,4 @@ export async function is_session_active(id) {
         else
             return 0
 
-    } catch (error) {
-        console.error(error);
-        throw new Error("Something went wrong");
-    }
 }

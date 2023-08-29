@@ -1,38 +1,48 @@
-import { Driver } from "../database/models/driver.model"
+import BaseEntity from "./base.entity";
+import { Driver } from '../database/models/driver.model'
 import Boom from "boom";
 
-export async function ifDriverPhoneExists(phone: string) {
-    const driver = await Driver.findOne({ where: { phone } })
-    return driver
-}
+class DriverEntity extends BaseEntity {
+    constructor() {
+        super(Driver);
+    }
 
-export async function addDriver(name: string, dob: string, phone: string, available: boolean) {
-    try {
-        const user = await Driver.create({
-            name,
-            dob,
-            phone,
-            available
-        });
-        return user;
-    } catch (error) {
-        console.error(error);
-        throw new Error("Failed to add driver details");
+    async addDriver(name, dob, phone, available) {
+        let payload = { name: name, dob: dob, phone: phone, available: available }
+        console.log("my payload",payload)
+        let data = await this.create(payload)
+        return data;
+    }
+
+    async fetchDrivers() {
+        let data = await this.findAll()
+        return data;
+    }
+    async removeDriver(id) {
+        let condition = { id: id };
+        let dataToDelete = await this.findOne(condition);
+
+        if (!dataToDelete) {
+            throw Boom.notFound(`Driver with ID ${id} not found`);
+        }
+
+        await this.destroy(dataToDelete);
+        return dataToDelete;
+    }
+    async ifPhoneExists(phone) {
+        let condition = { phone: phone }
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+    async fetchDriverById(id) {
+        let condition = { id: id }
+        let data = await this.findOne(condition)
+        return data
     }
 }
 
-export async function getDrivers() {
-    const driver = await Driver.findAll();
-    return driver
 
-}
-
-export async function remDriver(driver_id) {
-    const driver = await Driver.findOne({ where: { id: driver_id } });
-    if (!driver)
-        return null
-    driver.destroy();
-    return driver;
-}
+export const DriverE = new DriverEntity();
 
 

@@ -1,37 +1,48 @@
-import { Agent } from "../database/models/agent.model";
+import BaseEntity from "./base.entity";
+import { Agent } from '../database/models/agent.model'
 
-export async function ifAgentEmailExists(email: string) {
-    const user = await Agent.findOne({ where: { email } })
-    return user
+class AgentEntity extends BaseEntity {
+    constructor() {
+        super(Agent);
+    }
+
+    async login(email, password) {
+        let condition = { email: email, password: password }
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+    async ifEmailExists(email) {
+        let condition = { email: email }
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+    async ifPhoneExists(phone) {
+        let condition = { phone: phone }
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+    async createAgent(name, email, password, dob, phone,secret) {
+        let payload = { name: name, email: email, password: password, dob: dob, phone: phone ,twoFA:secret}
+        let data = await this.create(payload)
+        return data;
+    }
+
+    async getSecret(email) {
+        let condition = {email: email}
+        let data = await this.findOne(condition)
+        return data;
+    }
+
+    async fetchAgentById(id) {
+        let condition = { id: id }
+        let data = await this.findOne(condition)
+        return data
+    }
 }
 
-export async function ifAgentPhoneExists(phone: string) {
-    const user = await Agent.findOne({ where: { phone } })
-    return user
+export const AgentE = new AgentEntity();
 
-}
 
-export async function addAgent(name: string, email: string, password: string, dob: Date, phone: string) {
-    const user = await Agent.create({
-        name,
-        email,
-        password,
-        dob,
-        phone
-    });
-    return user;
-
-}
-
-export async function Agentlogin(email: string, password: string) {
-    const user = await Agent.findOne({ where: { email: email, password: password } })
-    return user
-
-}
-
-export async function updateAgentPassword(email: string, new_password: string) {
-    const user = await Agent.findOne({ where: { email: email } })
-    user.password = new_password;
-    return user
-
-}

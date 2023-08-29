@@ -1,15 +1,17 @@
-import { addUser, ifUserEmailExists, ifUserPhoneExists, Userlogin, updateUserPassword } from "../entities/user.entity";
-import { addAgent, ifAgentEmailExists, ifAgentPhoneExists, Agentlogin, updateAgentPassword } from "../entities/agent.entity";
 import { create_session, update_session } from "../entities/session.entity";
 import { createClient } from 'redis';
 import Jwt from 'jsonwebtoken';
 import Session from "../database/models/session.model";
 import Boom from "boom";
 import { generateOTP } from "../utils/generateotp";
-import { sendOTPByEmail } from "../utils/sendotpbyemail";
-import { AgentE } from "../entities/agent.base";
-import { UserE } from "../entities/user.base";
-import { Agent } from "../database/models/agent.model";
+import { sendOTPByEmail } from "../utils/emailSender";
+import { AgentE } from "../entities/agent.entity";
+import { UserE } from "../entities/user.entity";
+import speakeasy from 'speakeasy';
+import qrcode from 'qrcode';
+
+
+
 
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
@@ -24,7 +26,18 @@ export class signup_service {
         const check_phone = await AgentE.ifPhoneExists(phone);
         if (check_phone)
             throw Boom.conflict('Phone number already associated with an account', { errorCode: 'PHONE_EXISTS' });
-        return await AgentE.createAgent(name, email, password, dob, phone);
+
+
+        const secret = speakeasy.generateSecret({ length: 20 });
+        await AgentE.createAgent(name, email, password, dob, phone, secret.base32);
+
+        const qrCodeUrl = speakeasy.otpauthURL({
+            secret: secret.base32,
+            label: 'TravelAgent',
+            issuer: 'AgentProfile',
+        });
+        const qrCodeDataUrl = await qrcode.toDataURL(qrCodeUrl);
+        return qrCodeDataUrl;
     }
 
     async user_signup(name: string, email: string, password: string, dob: Date, phone: string) {
@@ -34,55 +47,120 @@ export class signup_service {
         const check_phone = await UserE.ifPhoneExists(phone);
         if (check_phone)
             throw Boom.conflict('Phone number already exists', { errorCode: 'PONE_EXISTS' });
-        return (await UserE.createUser(name, email, password, dob, phone));
+        const secret = speakeasy.generateSecret({ length: 20 });
+        await UserE.createUser(name, email, password, dob, phone, secret.base32);
+
+        const qrCodeUrl = speakeasy.otpauthURL({
+            secret: secret.base32,
+            label: 'TravelAgent',
+            issuer: 'UserProfile',
+        });
+        const qrCodeDataUrl = await qrcode.toDataURL(qrCodeUrl);
+        return qrCodeDataUrl;
     }
 }
 
 export class login_service {
-    async Userlogin(ip: string, email: string, password: string) {
+    async Userlogin(email: string, password: string, method: string) {
         const user = await UserE.login(email, password);
         if (!user)
             throw Boom.notFound('User not found', { errorCode: 'USER_NOT_FOUND' });
-        const token = Jwt.sign({ uid: user.id, type: "user" }, 'PS21', { expiresIn: '24h' });
-        const key = `${user.id}_${ip}`;
-        await client.hSet(key, {
-            'user_id': `${user.id}`,
-            'ip_address': `${ip}`,
-            'session': 'active'
-        });
-        const session = await Session.findByPk(key)
-        if (session)
-            await update_session(key)
-        else
-            await create_session(key, user.id, ip)
-
-        const otp = generateOTP();
-        const otpKey = `otp:${user.id}`;
-
-        await client.set(otpKey, otp);
-        await client.expire(otpKey, 120);
-        await sendOTPByEmail(email, otp);
-        return token
+        if (method != "email" && method != "app")
+            throw Boom.badRequest('invalid method', { errorCode: 'INVALID_METHOD' });
+        else if (method == "email") {
+            const otp = generateOTP();
+            const otpKey = `userotp:${user.id}`;
+            await client.set(otpKey, otp)
+            await client.expire(otpKey, 120);
+            await sendOTPByEmail(email, otp);
+        }
+        return user
     }
 
-    async AgentLogin(ip: string, email: string, password: string) {
+
+    async UserLogin_verification(ip: string, email: string, userEnteredOTP: string) {
+        const user = await UserE.getSecret(email);
+        if (!user)
+            throw Boom.notFound('Agent not found', { errorCode: 'USER_NOT_FOUND' });
+        const verificationResult = speakeasy.totp.verify({
+            secret: user.twoFA,
+            encoding: 'ascii',
+            token: userEnteredOTP,
+        });
+
+        const otpKey = `userotp:${user.id}`;
+        let redis_otp = false
+        if (await client.get(otpKey) == userEnteredOTP)
+            redis_otp = true
+
+        if (verificationResult || redis_otp) {
+            const key = `${user.id}_${ip}`;
+            const token = Jwt.sign({ uid: user.id, type: "user" }, 'PS21', { expiresIn: '1h' });
+            await client.hSet(key, {
+                'agent_id': `${user.id}`,
+                'ip_address': `${ip}`,
+                'session': 'active'
+            });
+            const session = await Session.findByPk(key)
+            if (session)
+                await update_session(key)
+            else
+                await create_session(key, user.id, ip)
+            return token
+        }
+        else
+            throw Boom.badRequest('Invalid OTP', { errorCode: 'INVALID_OTP' })
+    }
+
+    async AgentLogin(email: string, password: string, method: string) {
         const agent = await AgentE.login(email, password);
+        if (method != "email" && method != "app")
+            throw Boom.badRequest('invalid method', { errorCode: 'INVALID_METHOD' });
+        else if (method == "email") {
+            const otp = generateOTP();
+            const otpKey = `agentotp:${agent.id}`;
+            await client.set(otpKey, otp)
+            await client.expire(otpKey, 120);
+            await sendOTPByEmail(email, otp);
+        }
+        if (!agent)
+            throw Boom.notFound('Agent not found', { errorCode: 'USER_NOT_FOUND' });
+        return agent
+    }
+
+    async AgentLogin_verification(ip: string, email: string, userEnteredOTP: string) {
+        const agent = await AgentE.getSecret(email);
         console.log(agent)
         if (!agent)
             throw Boom.notFound('Agent not found', { errorCode: 'USER_NOT_FOUND' });
-        const key = `${agent.id}_${ip}`;
-        const token = Jwt.sign({ aid: agent.id, type: "admin" }, 'PS21', { expiresIn: '1h' });
-        await client.hSet(key, {
-            'agent_id': `${agent.id}`,
-            'ip_address': `${ip}`,
-            'session': 'active'
+
+        const verificationResult = speakeasy.totp.verify({
+            secret: agent.twoFA,
+            encoding: 'ascii',
+            token: userEnteredOTP,
         });
-        const session = await Session.findByPk(key)
-        if (session)
-            await update_session(key)
+        let redis_otp = false
+        const otpKey = `agentotp:${agent.id}`;
+        if (await client.get(otpKey) == userEnteredOTP)
+            redis_otp = true
+
+        if (verificationResult || redis_otp) {
+            const key = `${agent.id}_${ip}`;
+            const token = Jwt.sign({ aid: agent.id, type: "admin" }, 'PS21', { expiresIn: '1h' });
+            await client.hSet(key, {
+                'agent_id': `${agent.id}`,
+                'ip_address': `${ip}`,
+                'session': 'active'
+            });
+            const session = await Session.findByPk(key)
+            if (session)
+                await update_session(key)
+            else
+                await create_session(key, agent.id, ip)
+            return token
+        }
         else
-            await create_session(key, agent.id, ip)
-        return token
+            throw Boom.badRequest('Invalid OTP', { errorCode: 'INVALID_OTP' })
     }
 }
 
@@ -92,17 +170,33 @@ export class reset_password_controller {
         const user_email = await UserE.ifEmailExists(email);
         if (!user_email)
             throw Boom.notFound('User not found', { errorCode: 'USER_NOT_FOUND' });
-        await client.set(email, '2201')
-        return
-    } found
+        
+        const failedAttemptsKey = `FGTPWD_FAILED_${email}`;
+        const attempts = parseInt(await client.get(failedAttemptsKey)) || 0;
+        console.log(attempts)
+        if (attempts >= 3) {
+            throw Boom.tooManyRequests('Too many failed attempts. Please try again later.', {
+                errorCode: 'TOO_MANY_ATTEMPTS'
+            });
+        }
+        const otp = generateOTP();
+        await client.set(`FGTPWD_${email}`, otp);
+        await client.set(failedAttemptsKey, attempts + 1);
+        await client.expire(failedAttemptsKey, 1800); 
+        return;
+    }
 
     static async Userverify(email: string, otp: string, new_password: string) {
-        const otp_redis = await client.get(email);
-        console.log("comparing", otp_redis, "==", otp)
-        if (otp_redis != otp)
+        const otp_redis = await client.get(`FGTPWD_${email}`);
+        if (otp_redis !== otp) {
+            const failedAttemptsKey = `FGTPWD_FAILED_${email}`;
+            const attempts = parseInt(await client.get(failedAttemptsKey)) || 0;
+            await client.set(failedAttemptsKey, attempts + 1);
             throw Boom.badRequest('Invalid OTP', { errorCode: 'INVALID_OTP' });
-        await updateUserPassword(email, new_password)
-        client.del(email)
-        return
+        }
+        await UserE.updatePassword(email, new_password);
+        await client.del(`FGTPWD_${email}`);
+        await client.del(`FGTPWD_FAILED_${email}`);
+        return;
     }
 }

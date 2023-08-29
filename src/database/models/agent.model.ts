@@ -10,6 +10,7 @@ interface AgentInterface {
     password: string;
     dob:Date;
     phone: string;
+    twoFA:string
 
 }
 
@@ -21,6 +22,7 @@ class Agent extends Model<AgentInterface> implements AgentInterface {
     public password!: string;
     public dob!: Date;
     public phone!: string;
+    public twoFA!: string;
 
 }
 
@@ -51,6 +53,11 @@ Agent.init(
         phone: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        twoFA:
+        {
+            type: DataTypes.STRING,
+            allowNull: true
         }
     },
     {

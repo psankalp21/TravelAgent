@@ -32,12 +32,11 @@ class BookingEntity extends BaseEntity {
 
     async ifDriverAvailable(id, driver_id) {
         let driver = await this.findOne({ id })
-        console.log("driverrrrrr:::",driver.journey_date)
         if (!driver)
             throw Boom.badRequest("Driver Not Found")
         let condition = { driver_id: driver_id, journey_date:driver.journey_date }
         let data = await this.findAllcondition(condition)
-        if (data)
+        if (data.length > 0)
             throw Boom.badRequest("Driver not available")
         return data
     }
@@ -45,7 +44,7 @@ class BookingEntity extends BaseEntity {
     async assignDriver(id,agent_id,driver_id)
     {
         let condition = { id:id }
-        let update = {driver_id:driver_id,agent_id:agent_id}
+        let update = {driver_id:driver_id,agent_id:agent_id,journey_status:"scheduled",booking_status:"accepted"}
         return await this.update(update,condition)
     }
 
@@ -84,8 +83,14 @@ class BookingEntity extends BaseEntity {
     async FetchBookingByID(booking_id)
     {
         let condition = {id:booking_id}
-        return await this.findAllcondition(condition)
+        return await this.findOne(condition)
     }
+    async fetchBookingAvailability(taxi_id,journey_date)
+    {
+        let condition = {taxi_id:taxi_id,journey_date:journey_date}
+        return await this.findOne(condition)
+    }
+    
 }
 
 
