@@ -1,6 +1,5 @@
 import Hapi from '@hapi/hapi';
 import authroutes from './routes/authroutes'
-// import { getDistance } from './controllers/google_api.controller';
 import dotenv from 'dotenv';
 import { sequelize } from './database/db.connection';
 import { User } from './database/models/user.model';
@@ -14,10 +13,8 @@ import hapiswagger from 'hapi-swagger';
 import inert from '@hapi/inert';
 import vision from '@hapi/vision'
 import Session from './database/models/session.model';
-import errorHandlingMiddleware from './middleware/errorhandle'; // Adjust the path
-// import { user_forgot_password_controller, user_login_controller, user_signup_controller, user_verify_otp } from './controllers/auth.controller';
-
-
+import errorHandlingMiddleware from './middleware/errorhandle';
+import {startScheduler} from './common/cron'
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 
@@ -58,7 +55,7 @@ const init = async () => {
     {
       plugin: {
         name: 'errorHandlingPlugin',
-        register: errorHandlingMiddleware, 
+        register: errorHandlingMiddleware,
       },
     },
   ]);
@@ -66,9 +63,9 @@ const init = async () => {
   server.route(authroutes)
   server.route(agentRoutes)
   server.route(userRoutes)
-
   await server.start();
   console.log('Server running on %s', server.info.uri);
+  startScheduler();
 
   sequelize.sync().then(() => {
     User.sync();

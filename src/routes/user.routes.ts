@@ -27,6 +27,26 @@ const userRoutes: ServerRoute[] = [
   },
 
   {
+    method: 'get',
+    path: '/checkFare',
+    handler: booking_managment_controller.check_fare,
+    options: {
+      pre: [{ method: jwtMiddleware }],
+      tags: ['api', 'user'],
+      description: "User can get an estimated fare.",
+      validate: {
+        query: Joi.object({
+          source: Joi.string().required(),
+          destination: Joi.string().required()
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      },
+    },
+  },
+  {
     method: 'GET',
     path: '/getAvailableTaxis',
     handler: user_taxi_controller.get_taxi,

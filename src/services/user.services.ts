@@ -4,6 +4,9 @@ import axios from "axios";
 import { createClient } from "redis";
 import Session from "../database/models/session.model";
 import { BookingE } from "../entities/booking.entity";
+import { sendEmail } from "../utils/emailSender";
+import { distance_api } from "../common/distanceapi";
+import { UserE } from "../entities/user.entity";
 
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
@@ -11,40 +14,28 @@ client.connect();
 
 export class booking_managment {
     static async add_booking(user_id: number, source: string, destination: string, taxi_id: string, journey_date: Date, journey_time: string) {
-        const options = {
-            method: 'POST',
-            url: 'https://distanceto.p.rapidapi.com/distance/route',
-            params: { car: 'true' },
-            headers: {
-                'content-type': 'application/json',
-                'X-RapidAPI-Key': 'b9caf1cca2msh9228a609241864fp18a502jsne626318a2d92',
-                'X-RapidAPI-Host': 'distanceto.p.rapidapi.com',
-            },
-            data: {
-                route: [
-                    {
-                        country: 'IN',
-                        name: source,
-                    },
-                    {
-                        country: 'IN',
-                        name: destination,
-                    },
-                ],
-            },
-        };
-        const response = await axios.request(options);
-        const data_res = response.data.route.car;
-        const distance = parseFloat(data_res.distance).toFixed(1);
-        const drn = parseFloat((data_res.duration).toFixed(1));
-        const duration = drn / 3600;
-        if (distance == "0")
+       
+        const data = await distance_api(source,destination);
+        const distance = data.distance;
+        const duration = data.duration;
+
+        if (distance == "0" )
             throw Boom.badRequest('Invalid Source or Destination');
         const checkBooking = await BookingE.fetchBookingAvailability(taxi_id, journey_date)
         if (checkBooking)
             throw Boom.badRequest(`Taxi not avaiable for ${journey_date}`);
-        const user = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
+        const user = await UserE.fetchUserById(user_id)
+        const booking = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
+        const subject = "Booking request has been added"
+        const text = `Dear ${user.name}, You have made a booking for a journey on ${journey_date}. Your booking request is currently is queue and will be soon processed by our agent. Please use booking id: ${booking.id} to track it`
+        await sendEmail(user.email,subject,text)
         return
+    }
+
+    static async check_fare(source,destination) {
+        const data = await distance_api(source, destination);
+        const fare = (parseFloat(data.distance)*15)
+        return fare
     }
 
     static async cancel_booking(user_id, booking_id) {
@@ -61,7 +52,6 @@ export class booking_managment {
             throw Boom.badRequest("Invalid Action")
         await BookingE.startJourney(booking_id);
         return;
-
     }
 
     static async end_journey(booking_id: number) {

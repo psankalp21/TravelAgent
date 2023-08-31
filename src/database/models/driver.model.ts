@@ -5,6 +5,7 @@ import { sequelize } from '../db.connection';
 interface DriverInterface {
     id: IntegerDataType;
     name: string;
+    email:string;
     dob:string;
     phone: string;
     available: boolean
@@ -14,6 +15,7 @@ interface DriverInterface {
 class Driver extends Model<DriverInterface> implements DriverInterface {
     public id!: IntegerDataType;
     public name!: string;
+    public email!: string;
     public dob!: string;
     public phone!: string;
     public available!: boolean
@@ -28,6 +30,10 @@ Driver.init(
             primaryKey: true,
         },
         name: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        email: {
             type: DataTypes.STRING,
             allowNull: false
         },

@@ -6,8 +6,8 @@ const PORT = process.env.PORT || 4000;
 
 export class driver_managment_controller {
     static async add_driver(request: Request, h: ResponseToolkit) {
-        const { name, dob, phone, available } = <any>request.payload;
-        await driver_managment.registerDriver(name, dob, phone, available);
+        const { name, dob,email, phone, available } = <any>request.payload;
+        await driver_managment.registerDriver(name, email,dob, phone, available);
         return h.response({
             "Message": "Driver Added Successfully!"
         }).code(201);
@@ -22,13 +22,18 @@ export class driver_managment_controller {
         const { driver_id } = <any>request.query;
         await driver_managment.removeDrivers(driver_id);
         return h.response({ "Message:": "Driver details removed" }).code(201);
+    }
 
+    static async toggle_driver_availability(request: Request, h: ResponseToolkit) {
+        const { driver_id } = <any>request.query;
+        const status = await driver_managment.toggleDriverStatus(driver_id);
+        return h.response({ "Message:": `Driver marked as ${status}` }).code(201);
     }
 }
 
 export class taxi_management_controller {
     static async add_taxi(request: Request, h: ResponseToolkit) {
-        const { id, model, category, capacity, fuel_type, available } = <any>request.payload;
+        const { id, model, category, capacity, fuel_type } = <any>request.payload;
         await taxi_managment.addNewTaxi(id, model, category, capacity, fuel_type);
         return h.response({
             "Message": "Taxi Added Successfully!"
@@ -77,6 +82,12 @@ export class agent_booking_controller {
         const { booking_id, driver_id } = <any>request.payload;
         await agent_booking_services.acceptBooking(agent_id, booking_id, driver_id)
         return h.response({ "Message": `Bookings accepted, Driver Assigned` }).code(201);
+    }
+
+    static async reject_booking(request: Request, h: ResponseToolkit) {
+        const { id } = <any>request.query;
+        await agent_booking_services.rejectBooking(id)
+        return h.response({ "Message": `Booking Rejected for ${id}` }).code(201);
     }
 
 }

@@ -1,18 +1,24 @@
 import nodemailer from 'nodemailer';
+import dotenv from "dotenv"
+
+dotenv.config();
+const email = process.env.EMAIL_USER;
+const pass = process.env.EMAIL_PASSWORD;
+
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
   auth: {
-    user: 'fantemyt@gmail.com',
-    pass: 'nouuvvuvfieekvcm',
+    user: email,
+    pass: pass,
   },
-  
 });
-export async function sendOTPByEmail(email, otp,) {
+
+export async function sendEmail(email,subject,text) {
   try {
     const info = await transporter.sendMail({
       to: email,
-      subject: 'Your OTP for Login',
-      text: `Your OTP is: ${otp}`,
+      subject: subject,
+      text: text,
     });
     console.log('Message sent: %s', info.messageId);
   } catch (error) {

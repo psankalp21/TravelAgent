@@ -1,7 +1,7 @@
 import { ServerRoute } from "@hapi/hapi"
 import { admin_jwtMiddleware } from "../middleware/jwt";
 import Joi from "joi";
-import { agent_booking_controller, agent_logout_controller, driver_managment_controller, taxi_management_controller} from "../controllers/agent.controller"
+import { agent_booking_controller, agent_logout_controller, driver_managment_controller, taxi_management_controller } from "../controllers/agent.controller"
 const agentRoutes: ServerRoute[] = [
   {
     method: 'POST',
@@ -14,6 +14,7 @@ const agentRoutes: ServerRoute[] = [
       validate: {
         payload: Joi.object({
           name: Joi.string().required(),
+          email: Joi.string().email().required(),
           dob: Joi.string().required(),
           phone: Joi.string().required(),
           available: Joi.boolean()
@@ -42,7 +43,25 @@ const agentRoutes: ServerRoute[] = [
       },
     },
   },
-
+  {
+    method: 'PATCH',
+    path: '/toggleDriverAvailability',
+    handler: driver_managment_controller.toggle_driver_availability,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Toggle the driver's status from available to unavailable or vice versa",
+      validate: {
+        query: Joi.object({
+          driver_id: Joi.number().required()
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      },
+    },
+  },
   {
     method: 'DELETE',
     path: '/removeDriver',
@@ -50,7 +69,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"Agents can remove a driver from the database",
+      description: "Agents can remove a driver from the database",
       validate: {
         query: Joi.object({
           driver_id: Joi.string().required()
@@ -66,13 +85,36 @@ const agentRoutes: ServerRoute[] = [
   },
 
   {
+    method: 'PATCH',
+    path: '/rejectBooking',
+    handler: agent_booking_controller.reject_booking,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can reject a booking",
+      validate: {
+        query: Joi.object({
+          id: Joi.number().required()
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+
+        }
+      },
+    },
+
+  },
+
+
+  {
     method: 'POST',
     path: '/addTaxi',
     handler: taxi_management_controller.add_taxi,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"Admins can add new taxi details to the system, including vehicle information, capacity, and availability",
+      description: "Admins can add new taxi details to the system, including vehicle information, capacity, and availability",
       validate: {
         payload: Joi.object({
           id: Joi.string().required(),
@@ -96,7 +138,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"Agents have the rights to remove taxi from the system",
+      description: "Agents have the rights to remove taxi from the system",
       validate: {
         query: Joi.object({
           taxi_id: Joi.string().required()
@@ -115,7 +157,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"A comprehensive list of available taxis, displaying crucial information about each vehicle, is readily available",
+      description: "A comprehensive list of available taxis, displaying crucial information about each vehicle, is readily available",
       validate: {
         options: {
           allowUnknown: true,
@@ -131,7 +173,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"An organized list of all bookings, along with their statuses, is available for administrators to monitor and manage.",
+      description: "An organized list of all bookings, along with their statuses, is available for administrators to monitor and manage.",
       validate: {
         options: {
           allowUnknown: true,
@@ -147,7 +189,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"An organized list of all bookings that are pending is available for agents.",
+      description: "An organized list of all bookings that are pending is available for agents.",
       validate: {
         options: {
           allowUnknown: true,
@@ -163,7 +205,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"Agents can accept a pending booking. This will assign a driver & confirm the booking",
+      description: "Agents can accept a pending booking. This will assign a driver & confirm the booking",
       validate: {
         payload: Joi.object({
           booking_id: Joi.number().required(),
@@ -183,7 +225,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"Agents can change the availability status of a taxi",
+      description: "Agents can change the availability status of a taxi",
       validate: {
         payload: Joi.object({
           taxi_id: Joi.string().required(),
@@ -202,7 +244,7 @@ const agentRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: admin_jwtMiddleware }],
       tags: ['api', 'agent'],
-      description:"Agents can logout",
+      description: "Agents can logout",
       validate: {
         options: {
           allowUnknown: true,

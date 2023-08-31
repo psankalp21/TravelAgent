@@ -12,6 +12,13 @@ export class booking_managment_controller {
         }).code(201);
     }
 
+    static async check_fare(request: Request, h: ResponseToolkit) {
+        const { source, destination} = <any>request.query;
+        const fare = await booking_managment.check_fare(source,destination);
+        return h.response({
+            "Message": `Your expected fare is ${fare} INR.`
+        }).code(201);
+    }
 
     static async view_all_bookings(request: Request, h: ResponseToolkit) {
 

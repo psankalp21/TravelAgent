@@ -14,7 +14,7 @@ const generateRecipientPDF = async (bookingData: any): Promise<Buffer> => {
         doc.fontSize(20).text('Booking Details', { align: 'center' });
 
         const tableRows = [
-            ['User Name:', bookingData.user_name],
+            ['Name:', bookingData.user_name],
             ['Source:', bookingData.source],
             ['Destination:', bookingData.destination],
             ['Duration:', bookingData.duration],

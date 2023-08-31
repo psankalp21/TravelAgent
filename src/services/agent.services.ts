@@ -4,9 +4,6 @@ import { DriverE } from "../entities/driver.entity";
 import { TaxiE } from "../entities/taxi.entity";
 import amqp from 'amqplib';
 import { BookingE } from "../entities/booking.entity";
-import { User } from "../database/models/user.model";
-import { Agent } from "../database/models/agent.model";
-import { Booking } from "../database/models/booking.model";
 import { UserE } from "../entities/user.entity";
 import { AgentE } from "../entities/agent.entity";
 const client = createClient();
@@ -14,13 +11,30 @@ client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 
 export class driver_managment {
-    static async registerDriver(name: string, dob: string, phone: string, available: boolean) {
+    static async registerDriver(name: string, email: string, dob: string, phone: string, available: boolean) {
         const driver = await DriverE.ifPhoneExists(phone);
         console.log(driver)
         if (driver)
             throw Boom.conflict('Phone number already associated with a driver', { errorCode: 'PHONE_EXISTS' });
-        await DriverE.addDriver(name, dob, phone, available)
+        await DriverE.addDriver(name, email, dob, phone, available)
         return
+    }
+
+    static async toggleDriverStatus(id: number) {
+        const driver = await DriverE.fetchDriverById(id);
+        if (!driver)
+            throw Boom.notFound('No such driver', { errorCode: 'DRIVER_NOT_FOUND' });
+
+        if (driver.available == true) {
+            driver.available = false
+            driver.save();
+            return ("Unavailable");
+        }
+        else {
+            driver.available = true
+            driver.save();
+            return ("Available")
+        }
     }
 
     static async fetchDrivers() {
@@ -92,16 +106,16 @@ export class agent_booking_services {
             email: user.email,
             user_name: user.name,
             source: booking.source,
-            destination: booking.destination,
-            duration: booking.duration,
+            destination: `${booking.distance} KM`,
+            duration: `${booking.duration} Hours`,
             distance: booking.distance,
             driver: driver.name,
-            expected_fare: parseFloat(booking.distance) * 20,
+            expected_fare: parseFloat(booking.distance) * 15,
             agent_name: agent.name,
-            journey_status: "scheduled",
-            booking_status: "accepted",
+            journey_status: "Scheduled",
+            booking_status: "Accepted",
         };
-    
+
         channel.sendToQueue(queueName, Buffer.from(JSON.stringify(bookingData)), { persistent: true });
 
         await channel.close();
@@ -121,6 +135,17 @@ export class agent_booking_services {
         if (booking.length == 0)
             throw Boom.notFound('Booking not found', { errorCode: 'BOOKING_NOT_FOUND' });
         return booking
+    }
+
+    static async rejectBooking(id) {
+        const booking = await BookingE.FetchBookingByID(id)
+        if (!booking)
+            throw Boom.notFound('Booking not found', { errorCode: 'BOOKING_NOT_FOUND' });
+        else if (booking.booking_status == "rejected")
+            throw Boom.conflict('Booking is already rejected', { errorCode: 'BOOKING_ALREADY_REJECTED' });
+        else if (booking.journey_status == "completed")
+            throw Boom.badRequest('Invalid request', { errorCode: 'INVALID_REQUEST' });
+        return await BookingE.rejectBooking(id);
     }
 }
 

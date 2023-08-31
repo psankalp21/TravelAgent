@@ -7,9 +7,8 @@ class DriverEntity extends BaseEntity {
         super(Driver);
     }
 
-    async addDriver(name, dob, phone, available) {
-        let payload = { name: name, dob: dob, phone: phone, available: available }
-        console.log("my payload",payload)
+    async addDriver(name, email, dob, phone, available) {
+        let payload = { name: name, email: email, dob: dob, phone: phone, available: available }
         let data = await this.create(payload)
         return data;
     }
@@ -22,10 +21,9 @@ class DriverEntity extends BaseEntity {
         let condition = { id: id };
         let dataToDelete = await this.findOne(condition);
 
-        if (!dataToDelete) {
+        if (!dataToDelete)
             throw Boom.notFound(`Driver with ID ${id} not found`);
-        }
-
+        
         await this.destroy(dataToDelete);
         return dataToDelete;
     }

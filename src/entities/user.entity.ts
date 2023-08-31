@@ -11,8 +11,8 @@ class UserEntity extends BaseEntity {
         return data;
     }
 
-    async login(email, password) {
-        let condition = { email: email, password: password }
+    async login(email) {
+        let condition = { email: email}
         let data = await this.findOne(condition)
         return data;
     }
