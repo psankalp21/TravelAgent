@@ -1,7 +1,7 @@
 import { ServerRoute } from "@hapi/hapi"
 import { admin_jwtMiddleware } from "../middleware/jwt";
 import Joi from "joi";
-import { agent_booking_controller, agent_logout_controller, driver_managment_controller, taxi_management_controller } from "../controllers/agent.controller"
+import { agent_booking_controller, agent_category_controller, agent_logout_controller, driver_managment_controller, taxi_management_controller } from "../controllers/agent.controller"
 const agentRoutes: ServerRoute[] = [
   {
     method: 'POST',
@@ -237,6 +237,105 @@ const agentRoutes: ServerRoute[] = [
       }
     }
   },
+
+  {
+    method: 'POST',
+    path: '/add_taxi_category',
+    handler: agent_category_controller.add_category,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can add new taxi categories",
+      validate: {
+        payload: Joi.object({
+          categoryName: Joi.string().required(),
+          categoryRate: Joi.number().required(),
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+  {
+    method: 'DELETE',
+    path: '/delete_taxi_category',
+    handler: agent_category_controller.remove_category,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can remove a taxi category",
+      validate: {
+        query: Joi.object({
+          categoryName: Joi.string().required()
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+
+  {
+    method: 'PATCH',
+    path: '/update_taxi_category',
+    handler: agent_category_controller.update_category_rate,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can update cost of taxi",
+      validate: {
+        payload: Joi.object({
+          categoryName: Joi.string().required(),
+          new_categoryRate: Joi.number().required(),
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+
+  {
+    method: 'GET',
+    path: '/get_category_rate',
+    handler: agent_category_controller.get_category_rate,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents get cost of a particular category of a taxi",
+      validate: {
+        query: Joi.object({
+          categoryName: Joi.string().required()
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+
+  {
+    method: 'GET',
+    path: '/get_all_categories',
+    handler: agent_category_controller.get_all_category,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can get details of all the categories available",
+      validate: {
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+
   {
     method: 'GET',
     path: '/agent_logout',

@@ -1,7 +1,7 @@
 // consumer.ts
 import amqp from 'amqplib';
-import { generateRecipientPDF } from '../utils/pdfGenerator';
-import { sendRecipient } from '../utils/emailSender'; 
+import { generateRecipientPDF } from './pdfGenerator';
+import { sendRecipient } from './emailSender'; 
 
 const startWorker = async () => {
     const connection = await amqp.connect('amqp://localhost');

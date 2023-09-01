@@ -10,15 +10,15 @@ interface BookingInterface {
     user_id: IntegerDataType;
     source: string;
     destination: string;
-    distance:string;
+    distance: string;
     duration: string;
     driver_id: IntegerDataType;
     taxi_id: string;
     agent_id: IntegerDataType;
     journey_date: Date;
-    journey_status: 'scheduled' | 'ongoing' | 'completed' | 'canceled'; 
-    booking_status: 'pending' | 'accepted' | 'rejected'; 
-    // fare_price: IntegerDataType;
+    journey_status: 'scheduled' | 'ongoing' | 'completed' | 'canceled';
+    booking_status: 'pending' | 'accepted' | 'rejected';
+    estimated_fare: IntegerDataType;
 }
 
 
@@ -27,7 +27,7 @@ class Booking extends Model<BookingInterface> implements BookingInterface {
     public user_id: IntegerDataType;
     public source: string;
     public destination: string;
-    public distance:string;
+    public distance: string;
     public duration: string;
     public driver_id: IntegerDataType;
     public taxi_id: string;
@@ -35,7 +35,7 @@ class Booking extends Model<BookingInterface> implements BookingInterface {
     public journey_date: Date;
     public journey_status: 'scheduled' | 'ongoing' | 'completed' | 'canceled';
     public booking_status: 'pending' | 'accepted' | 'rejected';
-    // public fare_price: DataTypes.IntegerDataType;
+    public estimated_fare: DataTypes.IntegerDataType;
 }
 
 
@@ -52,7 +52,7 @@ Booking.init(
             references: {
                 model: User,
                 key: "id",
-              },
+            },
         },
         source: {
             type: DataTypes.STRING,
@@ -76,7 +76,7 @@ Booking.init(
             references: {
                 model: Driver,
                 key: "id",
-              },
+            },
         },
         taxi_id: {
             type: DataTypes.STRING,
@@ -84,7 +84,7 @@ Booking.init(
             references: {
                 model: Taxi,
                 key: "id",
-              },
+            },
         },
         agent_id: {
             type: DataTypes.INTEGER,
@@ -92,31 +92,28 @@ Booking.init(
             references: {
                 model: Agent,
                 key: "id",
-              },
+            },
         }
         ,
         journey_date: {
             type: DataTypes.DATE,
             allowNull: true,
         },
-   
+
         journey_status:
         {
-            type: DataTypes.ENUM('scheduled', 'ongoing','completed','canceled'),
+            type: DataTypes.ENUM('scheduled', 'ongoing', 'completed', 'canceled'),
             allowNull: true,
-            defaultValue: null, 
+            defaultValue: null,
         },
         booking_status: {
-            type: DataTypes.ENUM('pending', 'accepted','rejected'),
+            type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
             allowNull: false,
-            defaultValue: 'pending', 
-        }
-        // ,
-        // fare_price: {
-        //     type: DataTypes.INTEGER,
-        //     allowNull: true,
-        //     defaultValue: 0, 
-        // }
+            defaultValue: 'pending',
+        },
+        estimated_fare: {
+            type: DataTypes.INTEGER,
+        }   
     },
     {
         sequelize: sequelize,
@@ -127,4 +124,4 @@ Booking.init(
 // Booking.belongsTo(Taxi, { foreignKey: 'taxi_id' });
 
 
-export {Booking}
+export { Booking }

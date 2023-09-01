@@ -1,6 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../db.connection';
 import { Booking } from './booking.model';
+import { Category } from './category.model';
 
 interface TaxiInterface {
     id: string;
@@ -30,9 +31,14 @@ Taxi.init(
             type: DataTypes.STRING,
             allowNull: false,
         },
+    
         category: {
             type: DataTypes.STRING,
             allowNull: false,
+            references: {
+                model: Category,
+                key: "categoryName",
+              },
         },
         capacity: {
             type: DataTypes.INTEGER,

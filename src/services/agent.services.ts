@@ -6,6 +6,7 @@ import amqp from 'amqplib';
 import { BookingE } from "../entities/booking.entity";
 import { UserE } from "../entities/user.entity";
 import { AgentE } from "../entities/agent.entity";
+import { CategoryE } from "../entities/category.entity";
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
@@ -106,11 +107,11 @@ export class agent_booking_services {
             email: user.email,
             user_name: user.name,
             source: booking.source,
-            destination: `${booking.distance} KM`,
-            duration: `${booking.duration} Hours`,
-            distance: booking.distance,
+            destination: booking.destination,
+            duration: `${booking.duration} Hrs`,
+            distance: `${booking.distance} Kms`,
             driver: driver.name,
-            expected_fare: parseFloat(booking.distance) * 15,
+            expected_fare: `INR ${booking.estimated_fare} `,
             agent_name: agent.name,
             journey_status: "Scheduled",
             booking_status: "Accepted",
@@ -146,6 +147,42 @@ export class agent_booking_services {
         else if (booking.journey_status == "completed")
             throw Boom.badRequest('Invalid request', { errorCode: 'INVALID_REQUEST' });
         return await BookingE.rejectBooking(id);
+    }
+}
+
+
+export class category_service {
+    static async addCategory(categoryName, categoryRate) {
+        const category = await CategoryE.ifCategoryExists(categoryName);
+        if (category)
+            throw Boom.conflict('This category already exists', { errorCode: 'CATEGORY_EXISTS' });
+        return await CategoryE.addNewCategory(categoryName, categoryRate);
+    }
+
+    static async get_all_category() {
+        const category = await CategoryE.getAllCategory();
+        return category
+    }
+    static async removeCategory(categoryName) {
+        const category = await CategoryE.ifCategoryExists(categoryName);
+        if (!category)
+            throw Boom.notFound('Category not found', { errorCode: 'CATEGORY_NOT_FOUND' });
+        return await CategoryE.removeCategory(categoryName);
+    }
+
+    static async updateCategoryRate(categoryName, categoryRate) {
+        const category = await CategoryE.ifCategoryExists(categoryName);
+        if (!category)
+            throw Boom.notFound('Category not found', { errorCode: 'CATEGORY_NOT_FOUND' });
+        return await CategoryE.updateCategoryRate(categoryName, categoryRate);
+    }
+
+    static async getCategoryRate(categoryName) {
+        const category = await CategoryE.ifCategoryExists(categoryName);
+        if (!category)
+            throw Boom.notFound('Category not found', { errorCode: 'CATEGORY_NOT_FOUND' });
+        const data = await CategoryE.getCategoryRate(categoryName);
+        return data.categoryRate
     }
 }
 

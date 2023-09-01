@@ -9,8 +9,8 @@ class BookingEntity extends BaseEntity {
 
 
 
-    async addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date) {
-        let payload = { user_id: user_id, source: source, destination: destination, distance: distance, duration: duration, taxi_id: taxi_id, journey_date: journey_date }
+    async addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date,estimated_fare) {
+        let payload = { user_id: user_id, source: source, destination: destination, distance: distance, duration: duration, taxi_id: taxi_id, journey_date: journey_date,estimated_fare:estimated_fare }
         let data = await this.create(payload)
         return data;
     }

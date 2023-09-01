@@ -1,4 +1,8 @@
 import axios from "axios";
+import dotenv from 'dotenv';
+
+dotenv.config();
+const KEY = process.env.API_KEY;
 
 export async function distance_api(source: string, destination: string) {
     const options = {
@@ -7,7 +11,7 @@ export async function distance_api(source: string, destination: string) {
         params: { car: 'true' },
         headers: {
             'content-type': 'application/json',
-            'X-RapidAPI-Key': 'b9caf1cca2msh9228a609241864fp18a502jsne626318a2d92',
+            'X-RapidAPI-Key': KEY,
             'X-RapidAPI-Host': 'distanceto.p.rapidapi.com',
         },
         data: {

@@ -1,5 +1,5 @@
 import { ServerRoute } from "@hapi/hapi"
-import { booking_managment_controller, user_logout_controller, user_taxi_controller } from "../controllers/user.controller"
+import { booking_managment_controller, user_category_controller, user_logout_controller, user_taxi_controller } from "../controllers/user.controller"
 import { jwtMiddleware } from '../middleware/jwt';
 import Joi from "joi";
 const userRoutes: ServerRoute[] = [
@@ -13,10 +13,12 @@ const userRoutes: ServerRoute[] = [
       description: "Book a taxi for a journey",
       validate: {
         payload: Joi.object({
-          source: Joi.string().required(),
-          destination: Joi.string().required(),
+          source_city: Joi.string().required(),
+          source_state: Joi.string().required(),
+          destination_city: Joi.string().required(),
+          destination_state: Joi.string().required(),
           taxi_id: Joi.string().required(),
-          journey_date: Joi.date(),
+          date: Joi.date().required(),
         }),
         options: {
           allowUnknown: true,
@@ -24,7 +26,8 @@ const userRoutes: ServerRoute[] = [
         }
       },
     },
-  },
+}
+,
 
   {
     method: 'get',
@@ -37,7 +40,8 @@ const userRoutes: ServerRoute[] = [
       validate: {
         query: Joi.object({
           source: Joi.string().required(),
-          destination: Joi.string().required()
+          destination: Joi.string().required(),
+          car_category: Joi.string().required()
         }),
         options: {
           allowUnknown: true,
@@ -91,6 +95,23 @@ const userRoutes: ServerRoute[] = [
         query: Joi.object({
           booking_id: Joi.number().required()
         }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+
+  {
+    method: 'GET',
+    path: '/get_all_category',
+    handler: user_category_controller.get_all_categories,
+    options: {
+      pre: [{ method: jwtMiddleware }],
+      tags: ['api', 'user'],
+      description: "User can get details of all the categories like cost",
+      validate: {
         options: {
           allowUnknown: true,
           security: [{ apiKey: [] }]

@@ -1,6 +1,5 @@
 import Hapi from '@hapi/hapi';
 import authroutes from './routes/authroutes'
-import dotenv from 'dotenv';
 import { sequelize } from './database/db.connection';
 import { User } from './database/models/user.model';
 import { Agent } from './database/models/agent.model';
@@ -14,7 +13,9 @@ import inert from '@hapi/inert';
 import vision from '@hapi/vision'
 import Session from './database/models/session.model';
 import errorHandlingMiddleware from './middleware/errorhandle';
-import {startScheduler} from './common/cron'
+import {startScheduler} from './utils/cron'
+import { Category } from './database/models/category.model';
+import dotenv from 'dotenv';
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 
@@ -74,6 +75,7 @@ const init = async () => {
     Taxi.sync();
     Booking.sync();
     Session.sync();
+    Category.sync();
     console.log('Connection has been established successfully.');
   }).catch((error) => {
     console.error('Unable to connect to the database: ', error);

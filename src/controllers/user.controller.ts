@@ -1,22 +1,25 @@
 import { Request, ResponseToolkit } from '@hapi/hapi';
-import { booking_managment, logout_service, user_taxi_service } from '../services/user.services';
-import Boom from 'boom';
+import { booking_managment, logout_service, user_category_service, user_taxi_service } from '../services/user.services';
 
 export class booking_managment_controller {
     static async add_booking(request: Request, h: ResponseToolkit) {
         const user_id = request.headers.uid
-        const { source, destination, taxi_id, journey_date, journey_time } = <any>request.payload;
-        await booking_managment.add_booking(user_id, source, destination, taxi_id, journey_date, journey_time);
+        const { source_city,source_state, destination_city,destination_state, taxi_id, date } = <any>request.payload;
+        // const journey_datetime = `${date} ${time}:00:00`;
+        // const journey_date = new Date(journey_datetime);
+        await booking_managment.add_booking(user_id, source_city,source_state, destination_city,destination_state, taxi_id, date);
         return h.response({
             "Message": "Booking Added Successfully!"
         }).code(201);
     }
 
     static async check_fare(request: Request, h: ResponseToolkit) {
-        const { source, destination} = <any>request.query;
-        const fare = await booking_managment.check_fare(source,destination);
+        const {source_city, source_state, destination_city, destination_state, categoryName} = <any>request.query;
+        
+        const fare = await booking_managment.check_fare(source_city, source_state, destination_city,destination_state,categoryName);
         return h.response({
-            "Message": `Your expected fare is ${fare} INR.`
+            "Message":"This is just an estimated fare. Original fare might vary.",
+            "Fare":fare
         }).code(201);
     }
 
@@ -70,6 +73,22 @@ export class user_taxi_controller {
         if (taxi) {
             return h.response({
                 "Message": taxi
+            }).code(201);
+        } else {
+            return h.response({
+                "Message": "No records found",
+            }).code(409);
+        }
+
+    }
+}
+
+export class user_category_controller {
+    static async get_all_categories(request: Request, h: ResponseToolkit) {
+        const categories = await user_category_service.getAll_category();
+        if (categories) {
+            return h.response({
+                "Message": categories
             }).code(201);
         } else {
             return h.response({

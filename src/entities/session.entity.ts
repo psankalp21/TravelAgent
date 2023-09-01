@@ -19,7 +19,6 @@ export async function inactive_session(id) {
         session.active = 'not active';
         session.save();
         return session;
-
 }
 
 
@@ -31,9 +30,7 @@ export async function update_session(id) {
         session.expiry = now;
         session.save();
         return session;
-   
 }
-
 
 export async function is_session_active(id) {
         const now = new Date();
@@ -48,5 +45,4 @@ export async function is_session_active(id) {
         }
         else
             return 0
-
 }

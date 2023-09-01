@@ -1,40 +1,56 @@
 import { filterTaxibyCapacity, filterTaxibyCategory } from "../entities/filter.entity";
 import Boom from "boom";
-import axios from "axios";
 import { createClient } from "redis";
 import Session from "../database/models/session.model";
 import { BookingE } from "../entities/booking.entity";
 import { sendEmail } from "../utils/emailSender";
-import { distance_api } from "../common/distanceapi";
+import { distance_api } from "../utils/distanceapi";
 import { UserE } from "../entities/user.entity";
+import { CategoryE } from "../entities/category.entity";
+import { fare_estimator } from "../utils/fare_calculator";
+import { TaxiE } from "../entities/taxi.entity";
 
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 
 export class booking_managment {
-    static async add_booking(user_id: number, source: string, destination: string, taxi_id: string, journey_date: Date, journey_time: string) {
-       
-        const data = await distance_api(source,destination);
-        const distance = data.distance;
+    static async add_booking(user_id: number, source_city: string, source_state: string, destination_city: string, destination_state: string, taxi_id: string, journey_date: Date) {
+        const source = source_city + ',' + source_state;
+        const destination = destination_city + ',' + destination_state;
+        const data = await distance_api(source, destination);
+        const distance = parseInt(data.distance);
         const duration = data.duration;
-
-        if (distance == "0" )
+        const taxi = await TaxiE.ifTaxiIdExists(taxi_id)
+        const category = await CategoryE.getCategoryRate(taxi.category)
+        if (distance == 0)
             throw Boom.badRequest('Invalid Source or Destination');
         const checkBooking = await BookingE.fetchBookingAvailability(taxi_id, journey_date)
         if (checkBooking)
             throw Boom.badRequest(`Taxi not avaiable for ${journey_date}`);
         const user = await UserE.fetchUserById(user_id)
-        const booking = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date);
+
+        const estimated_fare = await fare_estimator(source_state,distance,taxi.fuel_type,category.categoryAverage)
+        
+        const booking = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date, estimated_fare);
         const subject = "Booking request has been added"
         const text = `Dear ${user.name}, You have made a booking for a journey on ${journey_date}. Your booking request is currently is queue and will be soon processed by our agent. Please use booking id: ${booking.id} to track it`
-        await sendEmail(user.email,subject,text)
+        await sendEmail(user.email, subject, text)
         return
     }
 
-    static async check_fare(source,destination) {
+    static async check_fare(source_city, source_state, destination_city,destination_state, categoryName) {
+        const source = source_city + ',' + source_state;
+        const destination = destination_city + ',' + destination_state;
         const data = await distance_api(source, destination);
-        const fare = (parseFloat(data.distance)*15)
+        const distance = parseInt(data.distance);
+        if (data.distance == "0")
+            throw Boom.badRequest("Please enter valid source and destination");
+        const category = await CategoryE.getCategoryRate(categoryName)
+        if (!category)
+            throw Boom.badRequest("Please enter valid category name");
+
+        const fare = await fare_estimator(source_state,distance,null,category.categoryAverage)
         return fare
     }
 
@@ -93,6 +109,14 @@ export class user_taxi_service {
         }
     }
 }
+
+export class user_category_service {
+    static async getAll_category() {
+        const categories = await CategoryE.getAllCategory()
+        return categories
+    }
+}
+
 export class logout_service {
     static async user_logout(user_id, ip) {
         try {

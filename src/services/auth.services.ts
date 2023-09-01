@@ -15,6 +15,8 @@ const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 import dotenv from 'dotenv';
+dotenv.config();
+const secretKey = process.env.SECRET_KEY;
 
 export class signup_service {
     static async agent_signup(name: string, email: string, password: string, dob: Date, phone: string) {
@@ -78,7 +80,7 @@ export class login_service {
             await client.expire(otpKey, 120);
             const subject = "Login Verification"
             const text = `Hello ${user.name}, Your verification code is ${otp}`
-            await sendEmail(email,subject,text);
+            await sendEmail(email, subject, text);
         }
         return user
     }
@@ -101,7 +103,7 @@ export class login_service {
 
         if (verificationResult || redis_otp) {
             const key = `${user.id}_${ip}`;
-            const token = Jwt.sign({ uid: user.id, type: "user" }, 'PS21', { expiresIn: '1h' });
+            const token = Jwt.sign({ uid: user.id, type: "user" }, secretKey, { expiresIn: '1h' });
             await client.hSet(key, {
                 'agent_id': `${user.id}`,
                 'ip_address': `${ip}`,
@@ -134,7 +136,7 @@ export class login_service {
             await client.expire(otpKey, 120);
             const subject = "Login Verification"
             const text = `Hello ${agent.name}, Your verification code is ${otp}`
-            await sendEmail(email,subject,text);
+            await sendEmail(email, subject, text);
         }
         if (!agent)
             throw Boom.notFound('Agent not found', { errorCode: 'USER_NOT_FOUND' });
@@ -157,7 +159,7 @@ export class login_service {
 
         if (verificationResult || redis_otp) {
             const key = `${agent.id}_${ip}`;
-            const token = Jwt.sign({ aid: agent.id, type: "admin" }, 'PS21', { expiresIn: '1h' });
+            const token = Jwt.sign({ aid: agent.id, type: "admin" }, secretKey, { expiresIn: '1h' });
             await client.hSet(key, {
                 'agent_id': `${agent.id}`,
                 'ip_address': `${ip}`,

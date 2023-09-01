@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { Booking } from '../database/models/booking.model';
-import { sendEmail } from '../utils/emailSender';
+import { sendEmail } from './emailSender';
 import { UserE } from '../entities/user.entity';
 import { DriverE } from '../entities/driver.entity';
 

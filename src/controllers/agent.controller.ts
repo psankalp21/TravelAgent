@@ -1,5 +1,5 @@
 import { Request, ResponseToolkit } from '@hapi/hapi';
-import { agent_booking_services, driver_managment, logout_service, taxi_managment } from '../services/agent.services';
+import { agent_booking_services, category_service, driver_managment, logout_service, taxi_managment } from '../services/agent.services';
 import dotenv from 'dotenv';
 dotenv.config();
 const PORT = process.env.PORT || 4000;
@@ -88,6 +88,50 @@ export class agent_booking_controller {
         const { id } = <any>request.query;
         await agent_booking_services.rejectBooking(id)
         return h.response({ "Message": `Booking Rejected for ${id}` }).code(201);
+    }
+
+}
+
+export class agent_category_controller {
+    static async add_category(request: Request, h: ResponseToolkit) {
+        const { categoryName, categoryRate } = <any>request.payload;
+        await category_service.addCategory(categoryName, categoryRate);
+        return h.response({
+            "Message": "Category Added Successfuly"
+        }).code(201);
+
+    }
+    static async remove_category(request: Request, h: ResponseToolkit) {
+        const { categoryName} = <any>request.query;
+        await category_service.removeCategory(categoryName);
+        return h.response({
+            "Message": "Category Removed Successfuly"
+        }).code(201);
+    }
+    static async update_category_rate(request: Request, h: ResponseToolkit) {
+        const { categoryName, new_categoryRate} = <any>request.payload;
+        await category_service.updateCategoryRate(categoryName, new_categoryRate);
+        return h.response({
+            "Message": "Category Rate Updated Successfuly"
+        }).code(201);
+    }
+    static async get_category_rate(request: Request, h: ResponseToolkit) {
+        const { categoryName} = <any>request.query;
+        const rate = await category_service.getCategoryRate(categoryName);
+        return h.response({
+            "Cost Per Kilometer": `${categoryName} - ${rate} INR` }).code(201);
+    }
+    static async get_all_category(request: Request, h: ResponseToolkit) {
+        const categories = await category_service.get_all_category();
+        if (categories) {
+            return h.response({
+                "Message": categories
+            }).code(201);
+        } else {
+            return h.response({
+                "Message": "No records found",
+            }).code(409);
+        }
     }
 
 }
