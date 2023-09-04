@@ -75,11 +75,7 @@ export class user_taxi_controller {
     static async get_taxi(request: Request, h: ResponseToolkit) {
         const { capacity, category, fuel_type, date_time } = <any>request.query;
         const utcDateTime = moment.utc(date_time, 'YYYY-MM-DD HH:mm:ss');
-
-        // Convert to IST (Indian Standard Time)
         const istDateTime = utcDateTime.tz('Asia/Kolkata');
-
-        // Format the istDateTime as a string in the desired format
         const formattedDateTime = istDateTime.format('YYYY-MM-DD HH:mm:ss');
         const taxi = await user_taxi_service.getTaxi(capacity, category, fuel_type, formattedDateTime);
         if (taxi) {

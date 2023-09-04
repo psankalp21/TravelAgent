@@ -1,4 +1,3 @@
-// consumer.ts
 import amqp from 'amqplib';
 import { generateRecipientPDF } from './pdfGenerator';
 import { sendRecipient } from './emailSender'; 
