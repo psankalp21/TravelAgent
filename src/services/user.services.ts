@@ -15,7 +15,7 @@ client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 
 export class booking_managment {
-    static async add_booking(user_id: number, source_city: string, source_state: string, destination_city: string, destination_state: string, taxi_id: string, journey_date: Date) {
+    static async add_booking(user_id: number, source_city: string, source_state: string, destination_city: string, destination_state: string, taxi_id: string, journey_date: string) {
         const source = source_city + ',' + source_state;
         const destination = destination_city + ',' + destination_state;
         const data = await distance_api(source, destination);
@@ -26,20 +26,20 @@ export class booking_managment {
         if (distance == 0)
             throw Boom.badRequest('Invalid Source or Destination');
         const checkBooking = await BookingE.fetchBookingAvailability(taxi_id, journey_date)
-        if (checkBooking)
-            throw Boom.badRequest(`Taxi not avaiable for ${journey_date}`);
+        if (checkBooking) {
+            throw Boom.badRequest("Taxi not available for selected journey date");
+        }
+        console.log("ater error")
         const user = await UserE.fetchUserById(user_id)
-
-        const estimated_fare = await fare_estimator(source_state,distance,taxi.fuel_type,category.categoryAverage)
-        
+        const estimated_fare = await fare_estimator(source_state, distance, taxi.fuel_type, category.categoryAverage)
         const booking = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date, estimated_fare);
         const subject = "Booking request has been added"
         const text = `Dear ${user.name}, You have made a booking for a journey on ${journey_date}. Your booking request is currently is queue and will be soon processed by our agent. Please use booking id: ${booking.id} to track it`
         await sendEmail(user.email, subject, text)
-        return
+        return booking
     }
 
-    static async check_fare(source_city, source_state, destination_city,destination_state, categoryName) {
+    static async check_fare(source_city, source_state, destination_city, destination_state, categoryName) {
         const source = source_city + ',' + source_state;
         const destination = destination_city + ',' + destination_state;
         const data = await distance_api(source, destination);
@@ -50,7 +50,7 @@ export class booking_managment {
         if (!category)
             throw Boom.badRequest("Please enter valid category name");
 
-        const fare = await fare_estimator(source_state,distance,null,category.categoryAverage)
+        const fare = await fare_estimator(source_state, distance, null, category.categoryAverage)
         return fare
     }
 
@@ -97,16 +97,12 @@ export class booking_managment {
 
 export class user_taxi_service {
     static async getTaxi(capacity, category, fuel_type, journey_date) {
-        try {
-            if (capacity == null)
-                return await filterTaxibyCategory(category, fuel_type, fuel_type)
-            else if (category == null)
-                return await filterTaxibyCapacity(capacity, fuel_type, journey_date)
-        }
-        catch (error) {
-            console.error(error);
-            throw Boom.internal("An internal error occurred");
-        }
+
+        if (capacity == null)
+            return await filterTaxibyCategory(category, fuel_type, journey_date)
+        else if (category == null)
+            return await filterTaxibyCapacity(capacity, fuel_type, journey_date)
+
     }
 }
 
@@ -119,33 +115,27 @@ export class user_category_service {
 
 export class logout_service {
     static async user_logout(user_id, ip) {
-        try {
-            const key = `${user_id}_${ip}`;
-            await client.hSet(key, {
-                'user_id': `${user_id}`,
-                'ip_address': `${ip}`,
-                'session': 'inactive'
-            });
-            const session = await Session.findByPk(key)
-            if (session) {
-                if (session.active == "active") {
-                    session.active = "not active"
-                    session.save();
-                    return 1
-                }
-                else {
-                    throw Boom.badRequest("You are already loggedout");
 
-                }
+        const key = `${user_id}_${ip}`;
+        await client.hSet(key, {
+            'user_id': `${user_id}`,
+            'ip_address': `${ip}`,
+            'session': 'inactive'
+        });
+        const session = await Session.findByPk(key)
+        if (session) {
+            if (session.active == "active") {
+                session.active = "not active"
+                session.save();
+                return 1
             }
             else {
-                throw Boom.badRequest("Session doesnot Exists");
-            }
+                throw Boom.badRequest("You are already loggedout");
 
+            }
         }
-        catch (error) {
-            console.error(error);
-            throw Boom.internal("An internal error occurred");
+        else {
+            throw Boom.badRequest("Session doesnot Exists");
         }
     }
 }

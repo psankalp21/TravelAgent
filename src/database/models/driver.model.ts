@@ -9,7 +9,6 @@ interface DriverInterface {
     dob:string;
     phone: string;
     available: boolean
-
 }
 
 class Driver extends Model<DriverInterface> implements DriverInterface {

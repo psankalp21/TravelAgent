@@ -1,25 +1,30 @@
 import { Request, ResponseToolkit } from '@hapi/hapi';
 import { booking_managment, logout_service, user_category_service, user_taxi_service } from '../services/user.services';
+const moment = require('moment-timezone');
 
 export class booking_managment_controller {
     static async add_booking(request: Request, h: ResponseToolkit) {
-        const user_id = request.headers.uid
-        const { source_city,source_state, destination_city,destination_state, taxi_id, date } = <any>request.payload;
-        // const journey_datetime = `${date} ${time}:00:00`;
-        // const journey_date = new Date(journey_datetime);
-        await booking_managment.add_booking(user_id, source_city,source_state, destination_city,destination_state, taxi_id, date);
+        const user_id = request.headers.uid;
+        const { source_city, source_state, destination_city, destination_state, taxi_id, date_time } = request.payload as any;
+        const utcDateTime = moment.utc(date_time, 'YYYY-MM-DD HH:mm:ss');
+        const istDateTime = utcDateTime.tz('Asia/Kolkata');
+        const formattedDateTime = istDateTime.format('YYYY-MM-DD HH:mm:ss');
+        console.log(formattedDateTime);
+        await booking_managment.add_booking(user_id, source_city, source_state, destination_city, destination_state, taxi_id, formattedDateTime);
+
         return h.response({
             "Message": "Booking Added Successfully!"
         }).code(201);
+
     }
 
     static async check_fare(request: Request, h: ResponseToolkit) {
-        const {source_city, source_state, destination_city, destination_state, categoryName} = <any>request.query;
-        
-        const fare = await booking_managment.check_fare(source_city, source_state, destination_city,destination_state,categoryName);
+        const { source_city, source_state, destination_city, destination_state, categoryName } = <any>request.query;
+
+        const fare = await booking_managment.check_fare(source_city, source_state, destination_city, destination_state, categoryName);
         return h.response({
-            "Message":"This is just an estimated fare. Original fare might vary.",
-            "Fare":fare
+            "Message": "This is just an estimated fare. Original fare might vary.",
+            "Fare": fare
         }).code(201);
     }
 
@@ -68,8 +73,15 @@ export class booking_managment_controller {
 
 export class user_taxi_controller {
     static async get_taxi(request: Request, h: ResponseToolkit) {
-        const { capacity, category, fuel_type, journey_date } = <any>request.query;
-        const taxi = await user_taxi_service.getTaxi(capacity, category, fuel_type, journey_date);
+        const { capacity, category, fuel_type, date_time } = <any>request.query;
+        const utcDateTime = moment.utc(date_time, 'YYYY-MM-DD HH:mm:ss');
+
+        // Convert to IST (Indian Standard Time)
+        const istDateTime = utcDateTime.tz('Asia/Kolkata');
+
+        // Format the istDateTime as a string in the desired format
+        const formattedDateTime = istDateTime.format('YYYY-MM-DD HH:mm:ss');
+        const taxi = await user_taxi_service.getTaxi(capacity, category, fuel_type, formattedDateTime);
         if (taxi) {
             return h.response({
                 "Message": taxi

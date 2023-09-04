@@ -6,6 +6,7 @@ import Boom from "boom";
 
 export async function filterTaxibyCapacity(capacity, fuel_type, journey_date) {
     try {
+        
         const availableTaxis = await Taxi.findAll({
             attributes: ['id', 'model', 'capacity', 'category', 'fuel_type'],
             include: [

@@ -10,7 +10,7 @@ const userRoutes: ServerRoute[] = [
     options: {
       pre: [{ method: jwtMiddleware }],
       tags: ['api', 'user'],
-      description: "Book a taxi for a journey",
+      description: "Book a taxi for a journey. Use date in following format : 2023-09-04 00:00:00",
       validate: {
         payload: Joi.object({
           source_city: Joi.string().required(),
@@ -18,7 +18,9 @@ const userRoutes: ServerRoute[] = [
           destination_city: Joi.string().required(),
           destination_state: Joi.string().required(),
           taxi_id: Joi.string().required(),
-          date: Joi.date().required(),
+          date_time: Joi.string().required(),
+ 
+
         }),
         options: {
           allowUnknown: true,
@@ -63,7 +65,7 @@ const userRoutes: ServerRoute[] = [
           capacity: Joi.number(),
           category: Joi.string(),
           fuel_type: Joi.string().required(),
-          journey_date: Joi.string().required(),
+          date_time: Joi.string().required(),
         }),
         options: {
           allowUnknown: true,

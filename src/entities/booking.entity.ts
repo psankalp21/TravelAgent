@@ -6,9 +6,6 @@ class BookingEntity extends BaseEntity {
     constructor() {
         super(Booking);
     }
-
-
-
     async addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date,estimated_fare) {
         let payload = { user_id: user_id, source: source, destination: destination, distance: distance, duration: duration, taxi_id: taxi_id, journey_date: journey_date,estimated_fare:estimated_fare }
         let data = await this.create(payload)
@@ -38,7 +35,7 @@ class BookingEntity extends BaseEntity {
     }
 
     async ifDriverAvailable(id, driver_id) {
-        let driver = await this.findOne({ id })
+        let driver = await this.findOne({ id:id })
         if (!driver)
             throw Boom.badRequest("Driver Not Found")
         let condition = { driver_id: driver_id, journey_date: driver.journey_date }

@@ -12,7 +12,7 @@ export async function distance_api(source: string, destination: string) {
         headers: {
             'content-type': 'application/json',
             'X-RapidAPI-Key': KEY,
-            'X-RapidAPI-Host': 'distanceto.p.rapidapi.com',
+            'X-RapidAPI-Host': 'distanceto.p.rapidapi.com'
         },
         data: {
             route: [
@@ -25,13 +25,20 @@ export async function distance_api(source: string, destination: string) {
                     name: destination,
                 },
             ],
-        },
+        }
     };
+
+    try {
+        const response = await axios.request(options);
+        console.log(response.data);
+    } catch (error) {
+        console.error(error);
+    }
+    
     const response = await axios.request(options);
     const data_res = response.data.route.car;
     const distance = parseFloat(data_res.distance).toFixed(1);
     const durationInSeconds = parseFloat(data_res.duration);
     const duration = (durationInSeconds / 3600).toFixed(1);
-
-    return({distance:distance,duration:duration})
+    return ({ distance: distance, duration: duration })
 }

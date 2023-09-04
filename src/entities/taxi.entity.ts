@@ -51,7 +51,6 @@ class TaxiEntity extends BaseEntity {
         console.log("taxi found ",data)
         if (!data)
             throw Boom.notFound(`Taxi with ID ${id} not found`);
-
         let payload = { available:update }
         return await this.update(payload, condition);
     }

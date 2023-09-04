@@ -38,6 +38,7 @@ export class signup_service {
             label: 'TravelAgent',
             issuer: 'AgentProfile',
         });
+        
         const qrCodeDataUrl = await qrcode.toDataURL(qrCodeUrl);
         return qrCodeDataUrl;
     }
@@ -48,7 +49,7 @@ export class signup_service {
             throw Boom.conflict('User already exists with associated Email', { errorCode: 'EMAIL_EXISTS' });
         const check_phone = await UserE.ifPhoneExists(phone);
         if (check_phone)
-            throw Boom.conflict('Phone number already exists', { errorCode: 'PONE_EXISTS' });
+            throw Boom.conflict('Phone number already exists', { errorCode: 'PHONE_EXISTS' });
         const secret = speakeasy.generateSecret({ length: 20, name: email });
         const salt = 10;
         const hashpassword = await bcrypt.hash(password, salt)

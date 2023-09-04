@@ -42,11 +42,9 @@ export async function user_login_controller(request: Request, h: ResponseToolkit
     const login = new login_service();
     const result = await login.Userlogin(email, password,method);
     return h.response({
-        "Message": "Login Success, OTP Generated",
+        "Message": "OTP Generated",
     }).code(200);
 }
-
-
 
 export async function user_login_verification(request: Request, h: ResponseToolkit) {
     const ipAddress = request.info.remoteAddress;
@@ -57,8 +55,6 @@ export async function user_login_verification(request: Request, h: ResponseToolk
         "Message": "Login Success",
         "Token": result
     }).code(200);
-
-
 }
 
 export async function user_forgot_password_controller(request: Request, h: ResponseToolkit) {
@@ -68,7 +64,6 @@ export async function user_forgot_password_controller(request: Request, h: Respo
         "Message": "OTP Generated",
         "Action": `Enter OTP here : http://localhost:${PORT}/otp_verify`
     }).code(201);
-
 }
 
 export async function user_verify_otp(request: Request, h: ResponseToolkit) {
@@ -78,6 +73,5 @@ export async function user_verify_otp(request: Request, h: ResponseToolkit) {
         "Message": "Password has been updated.",
         "Action": `Please login to continue : http://localhost:${PORT}/login`
     }).code(201);
-
 }
 

@@ -1,20 +1,20 @@
 import Hapi from '@hapi/hapi';
 import authroutes from './routes/authroutes'
-import { sequelize } from './database/db.connection';
-import { User } from './database/models/user.model';
-import { Agent } from './database/models/agent.model';
 import agentRoutes from './routes/agent.routes';
-import { Driver } from './database/models/driver.model';
-import { Taxi } from './database/models/taxi.model';
-import { Booking } from './database/models/booking.model';
 import userRoutes from './routes/user.routes';
 import hapiswagger from 'hapi-swagger';
 import inert from '@hapi/inert';
 import vision from '@hapi/vision'
 import Session from './database/models/session.model';
+import { sequelize } from './database/db.connection';
+import { User } from './database/models/user.model';
+import { Agent } from './database/models/agent.model';
+import { Driver } from './database/models/driver.model';
+import { Taxi } from './database/models/taxi.model';
+import { Booking } from './database/models/booking.model';
+import { Category } from './database/models/category.model';
 import errorHandlingMiddleware from './middleware/errorhandle';
 import {startScheduler} from './utils/cron'
-import { Category } from './database/models/category.model';
 import dotenv from 'dotenv';
 dotenv.config();
 const PORT = process.env.PORT || 4000;
