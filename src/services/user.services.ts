@@ -59,13 +59,17 @@ export class booking_managment {
         return
     }
 
-    static async start_journey(booking_id) {
+    static async start_journey(booking_id, otp) {
         const journey = await BookingE.getJourneyStatus(booking_id);
+
         console.log(journey)
         if (!journey)
             throw Boom.notFound("Journey Not Found")
         else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'ongoing' || journey.journey_status === null)
             throw Boom.badRequest("Invalid Action")
+        const journeyOTP = await client.get("journeyOTP")
+        if (otp != journeyOTP)
+            throw Boom.badRequest("Invalid OTP")
         await BookingE.startJourney(booking_id);
         return;
     }

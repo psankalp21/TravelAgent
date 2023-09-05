@@ -1,0 +1,10 @@
+{
+    "web": {
+        "client_id": "12085553094-rk7rsl7kccsm9fv7viitu7u2g3mbto92.apps.googleusercontent.com",
+        "project_id": "travel-distance-395304",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": "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"
+    }
+}

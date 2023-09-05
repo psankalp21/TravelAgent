@@ -59,8 +59,8 @@ export class booking_managment_controller {
     }
 
     static async start_journey(request: Request, h: ResponseToolkit) {
-        const { booking_id } = request.payload as any;
-        const booking = await booking_managment.start_journey(booking_id);
+        const { booking_id,otp } = request.payload as any;
+        await booking_managment.start_journey(booking_id,otp);
         return h.response({ "Message": "Journey Started" }).code(201);
     }
 

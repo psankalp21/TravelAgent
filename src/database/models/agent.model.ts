@@ -1,6 +1,5 @@
-import { DataTypes, IntegerDataType, Model, Optional } from 'sequelize'
+import { DataTypes, IntegerDataType, Model } from 'sequelize'
 import { sequelize } from '../db.connection';
-import { Booking } from './booking.model';
 
 
 interface AgentInterface {

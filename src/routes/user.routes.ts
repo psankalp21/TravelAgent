@@ -77,7 +77,7 @@ const userRoutes: ServerRoute[] = [
   },
   {
     method: 'GET',
-    path: '/view_all_bookings',
+    path: '/viewAllBookings',
     handler: booking_managment_controller.view_all_bookings,
     options: {
       pre: [{ method: jwtMiddleware }],
@@ -87,7 +87,7 @@ const userRoutes: ServerRoute[] = [
   },
   {
     method: 'GET',
-    path: '/view_booking_by_id',
+    path: '/getBookingById',
     handler: booking_managment_controller.view_one_booking,
     options: {
       pre: [{ method: jwtMiddleware }],
@@ -107,7 +107,7 @@ const userRoutes: ServerRoute[] = [
 
   {
     method: 'GET',
-    path: '/get_all_category',
+    path: '/getAllCategories',
     handler: user_category_controller.get_all_categories,
     options: {
       pre: [{ method: jwtMiddleware }],
@@ -124,7 +124,7 @@ const userRoutes: ServerRoute[] = [
   },
   {
     method: 'PATCH',
-    path: '/start_journey',
+    path: '/startJourney',
     handler: booking_managment_controller.start_journey,
     options: {
       pre: [{ method: jwtMiddleware }],
@@ -133,6 +133,7 @@ const userRoutes: ServerRoute[] = [
       validate: {
         payload: Joi.object({
           booking_id: Joi.number().required(),
+          OTP: Joi.string().required(),
         }),
         options: {
           allowUnknown: true,
@@ -144,7 +145,7 @@ const userRoutes: ServerRoute[] = [
   },
   {
     method: 'PATCH',
-    path: '/end_journey',
+    path: '/endJourney',
     handler: booking_managment_controller.end_journey,
     options: {
       pre: [{ method: jwtMiddleware }],
@@ -165,7 +166,7 @@ const userRoutes: ServerRoute[] = [
   },
   {
     method: 'DELETE',
-    path: '/cancel_booking',
+    path: '/cancelBooking',
     handler: booking_managment_controller.cancel_booking,
     options: {
       pre: [{ method: jwtMiddleware }],
@@ -185,7 +186,7 @@ const userRoutes: ServerRoute[] = [
   },
   {
     method: 'DELETE',
-    path: '/user_logout',
+    path: '/userLogout',
     handler: user_logout_controller.user_logout,
     options: {
       pre: [{ method: jwtMiddleware }],

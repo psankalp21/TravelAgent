@@ -168,7 +168,7 @@ const agentRoutes: ServerRoute[] = [
   },
   {
     method: 'GET',
-    path: '/get_all_bookings',
+    path: '/getAllBookings',
     handler: agent_booking_controller.get_all_bookings,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -184,7 +184,7 @@ const agentRoutes: ServerRoute[] = [
   },
   {
     method: 'GET',
-    path: '/get_pending_bookings',
+    path: '/getPendingBookings',
     handler: agent_booking_controller.get_pending_bookings,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -240,7 +240,7 @@ const agentRoutes: ServerRoute[] = [
 
   {
     method: 'POST',
-    path: '/add_taxi_category',
+    path: '/addTaxiCategory',
     handler: agent_category_controller.add_category,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -260,7 +260,7 @@ const agentRoutes: ServerRoute[] = [
   },
   {
     method: 'DELETE',
-    path: '/delete_taxi_category',
+    path: '/deleteTaxiCategory',
     handler: agent_category_controller.remove_category,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -280,7 +280,7 @@ const agentRoutes: ServerRoute[] = [
 
   {
     method: 'PATCH',
-    path: '/update_taxi_category',
+    path: '/updateTaxiCategory',
     handler: agent_category_controller.update_category_rate,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -301,7 +301,7 @@ const agentRoutes: ServerRoute[] = [
 
   {
     method: 'GET',
-    path: '/get_category_rate',
+    path: '/getCategoryRate',
     handler: agent_category_controller.get_category_rate,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -321,7 +321,7 @@ const agentRoutes: ServerRoute[] = [
 
   {
     method: 'GET',
-    path: '/get_all_categories',
+    path: '/getCategories',
     handler: agent_category_controller.get_all_category,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -338,7 +338,7 @@ const agentRoutes: ServerRoute[] = [
 
   {
     method: 'GET',
-    path: '/agent_logout',
+    path: '/agentLogout',
     handler: agent_logout_controller.agent_logout,
     options: {
       pre: [{ method: admin_jwtMiddleware }],

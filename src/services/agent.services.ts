@@ -7,6 +7,7 @@ import { BookingE } from "../entities/booking.entity";
 import { UserE } from "../entities/user.entity";
 import { AgentE } from "../entities/agent.entity";
 import { CategoryE } from "../entities/category.entity";
+import { Producer } from "../utils/producer";
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
@@ -98,10 +99,10 @@ export class agent_booking_services {
         await BookingE.ifDriverAvailable(booking_id, driver_id)
         await BookingE.assignDriver(booking_id, agent_id, driver_id)
 
-        const connection = await amqp.connect('amqp://localhost');
-        const channel = await connection.createChannel();
+        // const connection = await amqp.connect('amqp://localhost');
+        // const channel = await connection.createChannel();
         const queueName = 'booking_queue';
-        await channel.assertQueue(queueName, { durable: true });
+        // await channel.assertQueue(queueName, { durable: true });
 
         const bookingData = {
             email: user.email,
@@ -117,10 +118,11 @@ export class agent_booking_services {
             booking_status: "Accepted",
         };
 
-        channel.sendToQueue(queueName, Buffer.from(JSON.stringify(bookingData)), { persistent: true });
+        Producer.sendToQueue(queueName,bookingData)
+        // channel.sendToQueue(queueName, Buffer.from(JSON.stringify(bookingData)), { persistent: true });
 
-        await channel.close();
-        await connection.close();
+        // await channel.close();
+        // await connection.close();
         return
     }
 
