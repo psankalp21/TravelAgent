@@ -2,12 +2,14 @@ import { createClient } from "redis";
 import Boom from "boom";
 import { DriverE } from "../entities/driver.entity";
 import { TaxiE } from "../entities/taxi.entity";
-import amqp from 'amqplib';
 import { BookingE } from "../entities/booking.entity";
 import { UserE } from "../entities/user.entity";
 import { AgentE } from "../entities/agent.entity";
 import { CategoryE } from "../entities/category.entity";
 import { Producer } from "../utils/producer";
+import { ReviewE } from "../entities/review.entity";
+import { Review } from "../database/models/review.model";
+import { Booking } from "../database/models/booking.model";
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
@@ -15,7 +17,6 @@ client.connect();
 export class driver_managment {
     static async registerDriver(name: string, email: string, dob: string, phone: string, available: boolean) {
         const driver = await DriverE.ifPhoneExists(phone);
-        console.log(driver)
         if (driver)
             throw Boom.conflict('Phone number already associated with a driver', { errorCode: 'PHONE_EXISTS' });
         await DriverE.addDriver(name, email, dob, phone, available)
@@ -68,7 +69,6 @@ export class taxi_managment {
     }
 
     static async removeTaxi(taxi_id) {
-        console.log("taxi_iddddd", taxi_id)
         const taxi = await TaxiE.removeTaxi(taxi_id);
         return taxi
     }
@@ -99,10 +99,7 @@ export class agent_booking_services {
         await BookingE.ifDriverAvailable(booking_id, driver_id)
         await BookingE.assignDriver(booking_id, agent_id, driver_id)
 
-        // const connection = await amqp.connect('amqp://localhost');
-        // const channel = await connection.createChannel();
         const queueName = 'booking_queue';
-        // await channel.assertQueue(queueName, { durable: true });
 
         const bookingData = {
             email: user.email,
@@ -119,10 +116,6 @@ export class agent_booking_services {
         };
 
         Producer.sendToQueue(queueName,bookingData)
-        // channel.sendToQueue(queueName, Buffer.from(JSON.stringify(bookingData)), { persistent: true });
-
-        // await channel.close();
-        // await connection.close();
         return
     }
 
@@ -186,6 +179,18 @@ export class category_service {
         const data = await CategoryE.getCategoryRate(categoryName);
         return data.categoryRate
     }
+}
+
+export class agent_review_service
+{
+
+    static async getBookingReview(booking_id) {
+        const review = await ReviewE.fetchBookingsReview(booking_id);
+        if (!review)
+            throw Boom.notFound('Review not found', { errorCode: 'REVIEW_NOT_FOUND' });
+        return review
+    }
+    
 }
 
 export class logout_service {

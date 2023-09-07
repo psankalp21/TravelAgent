@@ -12,7 +12,7 @@ import qrcode from 'qrcode';
 import bcrypt from 'bcrypt'
 
 const client = createClient();
-client.on('error', err => console.log('Redis Client Error', err));
+client.on('error', err => console.log('Redis Client Error!', err));
 client.connect();
 
 import dotenv from 'dotenv';
@@ -20,7 +20,7 @@ dotenv.config();
 const secretKey = process.env.SECRET_KEY;
 
 export class signup_service {
-    static async agent_signup(name: string, email: string, password: string, dob: Date, phone: string) {
+    static async agent_signup(name: string, email: string, password: string, dob: string, phone: string) {
         const agent = await AgentE.ifEmailExists(email);
         if (agent)
             throw Boom.conflict('User already exists with associated Email', { errorCode: 'EMAIL_EXISTS' });
@@ -44,7 +44,7 @@ export class signup_service {
         return qrCodeDataUrl;
     }
 
-    async user_signup(name: string, email: string, password: string, dob: Date, phone: string) {
+    async user_signup(name: string, email: string, password: string, dob: String, phone: string) {
         const user: any = await UserE.ifEmailExists(email);
         if (user)
             throw Boom.conflict('User already exists with associated Email', { errorCode: 'EMAIL_EXISTS' });
@@ -187,7 +187,6 @@ export class reset_password_controller {
 
         const failedAttemptsKey = `FGTPWD_FAILED_${email}`;
         const attempts = parseInt(await client.get(failedAttemptsKey)) || 0;
-        console.log(attempts)
         if (attempts >= 3) {
             throw Boom.tooManyRequests('Too many failed attempts. Please try again later.', {
                 errorCode: 'TOO_MANY_ATTEMPTS'

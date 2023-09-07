@@ -14,15 +14,13 @@ const startScheduler = () => {
     cron.schedule('* * * * *', async () => {
         try {
             const currentTime = new Date();
-            const timeInIST = new Date(currentTime.getTime() + (5.5 * 60 * 60 * 1000));
-            const reminderTime = new Date(timeInIST.getTime() + 2 * 60 * 60 * 1000);
+            const reminderTime = new Date(currentTime.getTime() + 2 * 60 * 60 * 1000);
             const pendingBookings = await Booking.findAll({
                 where: {
                     journey_date: reminderTime,
                     booking_status: 'accepted',
                 },
             });
-            console.log(pendingBookings)
             for (const booking of pendingBookings) {
                 const user = await UserE.fetchUserById(booking.user_id);
                 const driver = await DriverE.fetchDriverById(booking.driver_id);

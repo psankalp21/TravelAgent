@@ -66,7 +66,4 @@ Agent.init(
     }
 );
 
-
-// Agent.hasOne(Booking, { foreignKey: 'agent_id' });
-
 export {Agent}

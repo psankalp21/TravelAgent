@@ -17,7 +17,7 @@ export const jwtMiddleware = async (request: Request, h: ResponseToolkit) => {
         console.log("No Header")
         throw Boom.unauthorized('Authorization header missing')
     }
-
+    
     const token = authorizationHeader.replace('Bearer ', '');
 
     try {
@@ -31,7 +31,6 @@ export const jwtMiddleware = async (request: Request, h: ResponseToolkit) => {
             return h.continue;
         else
             throw Boom.unauthorized('Either your session is expired or you are logged out');
-
     } catch (error) {
         console.log(error)
         throw Boom.unauthorized(error);

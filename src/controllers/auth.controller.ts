@@ -1,24 +1,26 @@
 import { Request, ResponseToolkit } from '@hapi/hapi';
 import { signup_service, login_service, reset_password_controller } from '../services/auth.services';
 import dotenv from 'dotenv';
+import { LoginPayload, OTPPayload, SignupPayload } from '../typings/authController.types';
+
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 
 export async function agent_signup_controller(request: Request, h: ResponseToolkit) {
-    const { name, email, password, dob, phone } = <any>request.payload;
+    const { name, email, password, dob, phone } = request.payload as SignupPayload;
     const qr = await signup_service.agent_signup(name, email, password, dob, phone);
     return h.response(qr).code(201);
 }
 
 export async function user_signup_controller(request: Request, h: ResponseToolkit) {
-    const { name, email, password, dob, phone } = <any>request.payload;
+    const { name, email, password, dob, phone } = request.payload as SignupPayload;
     const signup = new signup_service();
     const data = await signup.user_signup(name, email, password, dob, phone);
     return h.response(data).code(500);
 }
 
 export async function agent_login_controller(request: Request, h: ResponseToolkit) {
-    const { email, password, method} = <any>request.payload;
+    const { email, password, method} = request.payload as LoginPayload;
     const login = new login_service();
     const result = await login.AgentLogin(email, password,method);
     return h.response({
@@ -28,7 +30,7 @@ export async function agent_login_controller(request: Request, h: ResponseToolki
 
 export async function agent_login_verification(request: Request, h: ResponseToolkit) {
     const ipAddress = request.info.remoteAddress;
-    const { email,OTP } = <any>request.payload;
+    const { email,OTP }:OTPPayload =  request.payload as OTPPayload;
     const login = new login_service();
     const result = await login.AgentLogin_verification(ipAddress,email,OTP);
     return h.response({
@@ -38,7 +40,7 @@ export async function agent_login_verification(request: Request, h: ResponseTool
 }
 
 export async function user_login_controller(request: Request, h: ResponseToolkit) {
-    const { email, password,method } = <any>request.payload;
+    const { email, password,method } = request.payload as LoginPayload;
     const login = new login_service();
     const result = await login.Userlogin(email, password,method);
     return h.response({
@@ -48,7 +50,7 @@ export async function user_login_controller(request: Request, h: ResponseToolkit
 
 export async function user_login_verification(request: Request, h: ResponseToolkit) {
     const ipAddress = request.info.remoteAddress;
-    const { email,OTP } = <any>request.payload;
+    const { email,OTP } = request.payload as OTPPayload;
     const login = new login_service();
     const result = await login.UserLogin_verification(ipAddress,email,OTP);
     return h.response({
@@ -58,7 +60,7 @@ export async function user_login_verification(request: Request, h: ResponseToolk
 }
 
 export async function user_forgot_password_controller(request: Request, h: ResponseToolkit) {
-    const { email } = <any>request.query;
+    const { email } = request.query as {email:string};
     await reset_password_controller.Userforgot_pwd(email);
     return h.response({
         "Message": "OTP Generated",

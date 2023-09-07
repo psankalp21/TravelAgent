@@ -1,7 +1,7 @@
 import { ServerRoute } from "@hapi/hapi"
 import { admin_jwtMiddleware } from "../middleware/jwt";
 import Joi from "joi";
-import { agent_booking_controller, agent_category_controller, agent_logout_controller, driver_managment_controller, taxi_management_controller } from "../controllers/agent.controller"
+import { agent_booking_controller, agent_category_controller, agent_logout_controller, agent_review_controler, driver_managment_controller, taxi_management_controller } from "../controllers/agent.controller"
 const agentRoutes: ServerRoute[] = [
   {
     method: 'POST',
@@ -45,7 +45,7 @@ const agentRoutes: ServerRoute[] = [
   },
   {
     method: 'PATCH',
-    path: '/toggleDriverAvailability',
+    path: '/toggleDriverStatus',
     handler: driver_managment_controller.toggle_driver_availability,
     options: {
       pre: [{ method: admin_jwtMiddleware }],
@@ -81,9 +81,7 @@ const agentRoutes: ServerRoute[] = [
         }
       },
     },
-
   },
-
   {
     method: 'PATCH',
     path: '/rejectBooking',
@@ -99,14 +97,10 @@ const agentRoutes: ServerRoute[] = [
         options: {
           allowUnknown: true,
           security: [{ apiKey: [] }]
-
         }
       },
     },
-
   },
-
-
   {
     method: 'POST',
     path: '/addTaxi',
@@ -151,7 +145,7 @@ const agentRoutes: ServerRoute[] = [
     }
   },
   {
-    method: 'POST',
+    method: 'GET',
     path: '/getTaxiDetails',
     handler: taxi_management_controller.fetch_taxi,
     options: {
@@ -237,7 +231,6 @@ const agentRoutes: ServerRoute[] = [
       }
     }
   },
-
   {
     method: 'POST',
     path: '/addTaxiCategory',
@@ -277,7 +270,6 @@ const agentRoutes: ServerRoute[] = [
       }
     }
   },
-
   {
     method: 'PATCH',
     path: '/updateTaxiCategory',
@@ -298,7 +290,6 @@ const agentRoutes: ServerRoute[] = [
       }
     }
   },
-
   {
     method: 'GET',
     path: '/getCategoryRate',
@@ -318,7 +309,6 @@ const agentRoutes: ServerRoute[] = [
       }
     }
   },
-
   {
     method: 'GET',
     path: '/getCategories',
@@ -335,7 +325,6 @@ const agentRoutes: ServerRoute[] = [
       }
     }
   },
-
   {
     method: 'GET',
     path: '/agentLogout',
@@ -345,6 +334,26 @@ const agentRoutes: ServerRoute[] = [
       tags: ['api', 'agent'],
       description: "Agents can logout",
       validate: {
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+  
+  {
+    method: 'GET',
+    path: '/getBookingReview',
+    handler: agent_review_controler.get_booking_review,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can get review of a particular booking.",
+      validate: {
+        query: Joi.object({
+          booking_id: Joi.number().required()
+        }),
         options: {
           allowUnknown: true,
           security: [{ apiKey: [] }]

@@ -1,5 +1,5 @@
 import { ServerRoute } from "@hapi/hapi"
-import { booking_managment_controller, user_category_controller, user_logout_controller, user_taxi_controller } from "../controllers/user.controller"
+import { booking_managment_controller, review_managment_controller, user_category_controller, user_logout_controller, user_taxi_controller } from "../controllers/user.controller"
 import { jwtMiddleware } from '../middleware/jwt';
 import Joi from "joi";
 const userRoutes: ServerRoute[] = [
@@ -19,7 +19,7 @@ const userRoutes: ServerRoute[] = [
           destination_state: Joi.string().required(),
           taxi_id: Joi.string().required(),
           date_time: Joi.string().required(),
- 
+
 
         }),
         options: {
@@ -28,8 +28,8 @@ const userRoutes: ServerRoute[] = [
         }
       },
     },
-}
-,
+  }
+  ,
 
   {
     method: 'get',
@@ -41,9 +41,11 @@ const userRoutes: ServerRoute[] = [
       description: "User can get an estimated fare.",
       validate: {
         query: Joi.object({
-          source: Joi.string().required(),
-          destination: Joi.string().required(),
-          car_category: Joi.string().required()
+          source_city: Joi.string().required(),
+          source_state: Joi.string().required(),
+          destination_city: Joi.string().required(),
+          destination_state: Joi.string().required(),
+          categoryName: Joi.string().required()
         }),
         options: {
           allowUnknown: true,
@@ -193,6 +195,54 @@ const userRoutes: ServerRoute[] = [
       tags: ['api', 'user'],
       description: "Logout user and remove the session",
       validate: {
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }],
+
+        }
+      }
+    }
+  },
+  {
+    method: 'POST',
+    path: '/addReview',
+    handler: review_managment_controller.add_review,
+    options: {
+      pre: [{ method: jwtMiddleware }],
+      tags: ['api', 'user'],
+      description: "Users can add review about driver and booking. Rating will only accept values from 0 to 5",
+      validate: {
+        payload: Joi.object({
+          booking_id: Joi.number().required(),
+          driver_rating: Joi.number().integer().min(0).max(5).required(),
+          taxi_rating: Joi.number().integer().min(0).max(5).required(),
+          journey_rating: Joi.number().integer().min(0).max(5).required(),
+          comment:Joi.string(),
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }],
+
+        }
+      }
+    }
+  },
+  {
+    method: 'POST',
+    path: '/updateReview',
+    handler: review_managment_controller.update_review,
+    options: {
+      pre: [{ method: jwtMiddleware }],
+      tags: ['api', 'user'],
+      description: "Users can update a particular review.",
+      validate: {
+        payload: Joi.object({
+          booking_id: Joi.number().required(),
+          driver_rating: Joi.number().integer().min(0).max(5).required(),
+          taxi_rating: Joi.number().integer().min(0).max(5).required(),
+          journey_rating: Joi.number().integer().min(0).max(5).required(),
+          comment:Joi.string(),
+        }),
         options: {
           allowUnknown: true,
           security: [{ apiKey: [] }],

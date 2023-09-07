@@ -9,13 +9,14 @@ import { UserE } from "../entities/user.entity";
 import { CategoryE } from "../entities/category.entity";
 import { fare_estimator } from "../utils/fare_calculator";
 import { TaxiE } from "../entities/taxi.entity";
+import { ReviewE } from "../entities/review.entity";
 
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
 
 export class booking_managment {
-    static async add_booking(user_id: number, source_city: string, source_state: string, destination_city: string, destination_state: string, taxi_id: string, journey_date: string) {
+    static async add_booking(user_id: number, source_city: string, source_state: string, destination_city: string, destination_state: string, taxi_id: string, journey_date: Date) {
         const source = source_city + ',' + source_state;
         const destination = destination_city + ',' + destination_state;
         const data = await distance_api(source, destination);
@@ -26,10 +27,8 @@ export class booking_managment {
         if (distance == 0)
             throw Boom.badRequest('Invalid Source or Destination');
         const checkBooking = await BookingE.fetchBookingAvailability(taxi_id, journey_date)
-        if (checkBooking) {
+        if (checkBooking)
             throw Boom.badRequest("Taxi not available for selected journey date");
-        }
-        console.log("ater error")
         const user = await UserE.fetchUserById(user_id)
         const estimated_fare = await fare_estimator(source_state, distance, taxi.fuel_type, category.categoryAverage)
         const booking = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date, estimated_fare);
@@ -55,14 +54,12 @@ export class booking_managment {
     }
 
     static async cancel_booking(user_id, booking_id) {
-        const user = await BookingE.removeBooking(booking_id, user_id);
+        await BookingE.removeBooking(booking_id, user_id);
         return
     }
 
     static async start_journey(booking_id, otp) {
         const journey = await BookingE.getJourneyStatus(booking_id);
-
-        console.log(journey)
         if (!journey)
             throw Boom.notFound("Journey Not Found")
         else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'ongoing' || journey.journey_status === null)
@@ -76,7 +73,6 @@ export class booking_managment {
 
     static async end_journey(booking_id: number) {
         const journey = await BookingE.getJourneyStatus(booking_id);
-        console.log(journey);
         if (!journey)
             throw Boom.notFound("Journey Not Found")
         else if (journey.journey_status === 'canceled' || journey.journey_status === 'completed' || journey.journey_status === 'scheduled' || journey.journey_status === null)
@@ -117,9 +113,54 @@ export class user_category_service {
     }
 }
 
+export class user_review_managment_service {
+    static async addReview(user_id, booking_id, driver_rating, taxi_rating, journey_rating, comment) {
+        console.log("service called", booking_id)
+        const data = await ReviewE.ifReviewExists(booking_id)
+        const booking = await BookingE.FetchBookingByID(booking_id)
+        if (!booking)
+            throw Boom.badRequest("No such booking")
+        if (data)
+            throw Boom.conflict("Review already exists for specified booking.")
+        console.log("review services")
+        const payload = {
+            id: booking_id,
+            user_id: user_id,
+            driver_rating: driver_rating,
+            taxi_rating: taxi_rating,
+            journey_rating: journey_rating,
+            comment: comment
+        }
+        console.log("payload called")
+        return (await ReviewE.addReview(payload));
+    }
+
+    static async updateReview(user_id, booking_id, driver_rating, taxi_rating, journey_rating, comment) {
+        const data = await ReviewE.ifReviewExists(booking_id)
+        if (!data || data.user_id != user_id)
+            throw Boom.notFound("Review not found")
+        const review = await ReviewE.fetchBookingsReview(booking_id)
+
+        const condition = { booking_id: booking_id };
+        const updateData = {
+            driver_rating: driver_rating,
+            taxi_rating: taxi_rating,
+            journey_rating: journey_rating,
+            comment: comment
+        }
+        return (await ReviewE.updateReview(condition, updateData));
+    }
+
+    static async getReview(booking_id) {
+        const review = await ReviewE.fetchBookingsReview(booking_id)
+        if (!review)
+            throw Boom.notFound("Review not found")
+        return review;
+    }
+}
+
 export class logout_service {
     static async user_logout(user_id, ip) {
-
         const key = `${user_id}_${ip}`;
         await client.hSet(key, {
             'user_id': `${user_id}`,
@@ -133,13 +174,10 @@ export class logout_service {
                 session.save();
                 return 1
             }
-            else {
+            else
                 throw Boom.badRequest("You are already loggedout");
-
-            }
         }
-        else {
+        else
             throw Boom.badRequest("Session doesnot Exists");
-        }
     }
 }

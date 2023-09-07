@@ -16,7 +16,6 @@ export async function fuel_api(source_state: string) {
 
     try {
         const response = await axios.request(options);
-        console.log(response.data);
         return response
     } catch (error) {
         console.error(error);

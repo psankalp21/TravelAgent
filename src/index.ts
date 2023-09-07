@@ -16,6 +16,7 @@ import { Category } from './database/models/category.model';
 import errorHandlingMiddleware from './middleware/errorhandle';
 import {startScheduler} from './utils/cron'
 import dotenv from 'dotenv';
+
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 
@@ -24,7 +25,6 @@ const init = async () => {
     port: PORT,
     host: 'localhost',
   });
-
 
   await server.register([
     inert,

@@ -21,7 +21,6 @@ interface BookingInterface {
     estimated_fare: IntegerDataType;
 }
 
-
 class Booking extends Model<BookingInterface> implements BookingInterface {
     public id!: IntegerDataType;
     public user_id: IntegerDataType;
@@ -121,7 +120,5 @@ Booking.init(
         timestamps: false,
     }
 );
-// Booking.belongsTo(Taxi, { foreignKey: 'taxi_id' });
-
 
 export { Booking }
