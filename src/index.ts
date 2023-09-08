@@ -14,9 +14,9 @@ import { Taxi } from './database/models/taxi.model';
 import { Booking } from './database/models/booking.model';
 import { Category } from './database/models/category.model';
 import errorHandlingMiddleware from './middleware/errorhandle';
-import {startScheduler} from './utils/cron'
+import { startScheduler } from './utils/cron'
 import dotenv from 'dotenv';
-
+import path from 'path';
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 
@@ -67,6 +67,10 @@ const init = async () => {
   await server.start();
   console.log('Server running on %s', server.info.uri);
   startScheduler();
+
+
+  const keyFilePath = path.join(__dirname, '../../drive.json');
+  console.log(`Resolved Key File Path: ${keyFilePath}`);
 
   sequelize.sync().then(() => {
     User.sync();

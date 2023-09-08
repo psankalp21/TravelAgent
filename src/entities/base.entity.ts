@@ -13,6 +13,10 @@ export default class BaseEntity
     {
         return await this.modelName.findAll()
     }
+    async findAllwithAttrib(condition)
+    {
+        return await this.modelName.findAll(condition)
+    }
     async findAllcondition(condition)
     {
         return await this.modelName.findAll({where:condition})

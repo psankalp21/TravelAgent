@@ -30,6 +30,28 @@ class ReviewEntity extends BaseEntity {
         let data = await this.findOne(condition)
         return data
     }
+
+    async fetchDriverReview(bookingids) {
+        let condition = {
+            attributes: ['id', 'driver_rating', 'comment'],
+            where: {
+              id: bookingids, 
+            },
+          }
+        let data = await this.findAllwithAttrib(condition)
+        return data
+    }
+
+    async fetchTaxiReview(taxiids) {
+        let condition = {
+            attributes: ['id', 'taxi_rating', 'comment'],
+            where: {
+              id: taxiids, 
+            },
+          }
+        let data = await this.findAllwithAttrib(condition)
+        return data
+    }
 }
 
 export const ReviewE = new ReviewEntity();

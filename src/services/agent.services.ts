@@ -115,7 +115,7 @@ export class agent_booking_services {
             booking_status: "Accepted",
         };
 
-        Producer.sendToQueue(queueName,bookingData)
+        Producer.sendToQueue(queueName, bookingData)
         return
     }
 
@@ -181,8 +181,7 @@ export class category_service {
     }
 }
 
-export class agent_review_service
-{
+export class agent_review_service {
 
     static async getBookingReview(booking_id) {
         const review = await ReviewE.fetchBookingsReview(booking_id);
@@ -190,7 +189,21 @@ export class agent_review_service
             throw Boom.notFound('Review not found', { errorCode: 'REVIEW_NOT_FOUND' });
         return review
     }
-    
+
+    static async getDriverReview(driver_id) {
+        const review = await BookingE.getBookingfromDriver(driver_id)
+        const bookingIds = review.map((booking) => booking.id);
+        const reviews = ReviewE.fetchDriverReview(bookingIds)
+        return reviews
+    }
+
+    static async getTaxiReview(taxi_id) {
+        const review = await BookingE.getBookingfromDriver(taxi_id)
+        const bookingIds = review.map((booking) => booking.id);
+        const reviews = ReviewE.fetchTaxiReview(bookingIds)
+        return reviews
+    }
+
 }
 
 export class logout_service {

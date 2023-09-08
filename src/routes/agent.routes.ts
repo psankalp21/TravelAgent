@@ -360,6 +360,45 @@ const agentRoutes: ServerRoute[] = [
         }
       }
     }
+  },
+
+  {
+    method: 'GET',
+    path: '/getDriverReview',
+    handler: agent_review_controler.get_driver_review,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can get past reviews of a driver.",
+      validate: {
+        query: Joi.object({
+          driver_id: Joi.number().required()
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
+  },
+  {
+    method: 'GET',
+    path: '/getTaxiReview',
+    handler: agent_review_controler.get_taxi_review,
+    options: {
+      pre: [{ method: admin_jwtMiddleware }],
+      tags: ['api', 'agent'],
+      description: "Agents can get past reviews of a taxi.",
+      validate: {
+        query: Joi.object({
+          taxi_id: Joi.number().required()
+        }),
+        options: {
+          allowUnknown: true,
+          security: [{ apiKey: [] }]
+        }
+      }
+    }
   }
 ]
 

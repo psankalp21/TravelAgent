@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { AgentBookingPayload, AgentCategoryPayload, DriverPayload, GetCategoryRateQuery, RemoveCategoryQuery, TaxiPayload, ToggleDriverPayload, ToggleTaxiPayload, UpdateCategoryRatePayload } from '../typings/agentController.types';
 import { Review } from '../database/models/review.model';
 import { Booking } from '../database/models/booking.model';
+import { AgentE } from '../entities/agent.entity';
+import { BookingE } from '../entities/booking.entity';
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 
@@ -100,6 +102,18 @@ export class agent_review_controler {
     static async get_booking_review(request: Request, h: ResponseToolkit) {
         const { booking_id } = request.query as { booking_id: number };
         const review = await agent_review_service.getBookingReview(booking_id)
+        return h.response({ "Message": review }).code(200);
+    }
+    
+    static async get_driver_review(request: Request, h: ResponseToolkit) {
+        const { driver_id } = request.query as { driver_id: number };
+        const review = await agent_review_service.getDriverReview(driver_id)
+        return h.response({ "Message": review }).code(200);
+    }
+
+    static async get_taxi_review(request: Request, h: ResponseToolkit) {
+        const { taxi_id } = request.query as { taxi_id: number };
+        const review = await agent_review_service.getTaxiReview(taxi_id)
         return h.response({ "Message": review }).code(200);
     }
 }
