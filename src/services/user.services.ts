@@ -10,6 +10,7 @@ import { CategoryE } from "../entities/category.entity";
 import { fare_estimator } from "../utils/fare_calculator";
 import { TaxiE } from "../entities/taxi.entity";
 import { ReviewE } from "../entities/review.entity";
+import {hotel} from "../utils/hotelapi";
 
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
@@ -20,6 +21,7 @@ export class booking_managment {
         const source = source_city + ',' + source_state;
         const destination = destination_city + ',' + destination_state;
         const data = await distance_api(source, destination);
+        const hotels = await hotel.fetchData(source_city)
         const distance = parseInt(data.distance);
         const duration = data.duration;
         const taxi = await TaxiE.ifTaxiIdExists(taxi_id)
@@ -33,9 +35,10 @@ export class booking_managment {
         const estimated_fare = await fare_estimator(source_state, distance, taxi.fuel_type, category.categoryAverage)
         const booking = await BookingE.addBooking(user_id, source, destination, distance, duration, taxi_id, journey_date, estimated_fare);
         const subject = "Booking request has been added"
-        const text = `Dear ${user.name}, You have made a booking for a journey on ${journey_date}. Your booking request is currently is queue and will be soon processed by our agent. Please use booking id: ${booking.id} to track it`
+        const text = `Dear ${user.name}, You have made a booking for a journey on ${journey_date}. Your booking rbookingequest is currently is queue and will be soon processed by our agent. Please use booking id: ${booking.id} to track it.
+        `
         await sendEmail(user.email, subject, text)
-        return booking
+        return {booking:booking,hotels:hotels}
     }
 
     static async check_fare(source_city, source_state, destination_city, destination_state, categoryName) {

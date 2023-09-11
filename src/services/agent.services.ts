@@ -6,10 +6,8 @@ import { BookingE } from "../entities/booking.entity";
 import { UserE } from "../entities/user.entity";
 import { AgentE } from "../entities/agent.entity";
 import { CategoryE } from "../entities/category.entity";
-import { Producer } from "../utils/producer";
+import {messageQueue} from "../utils/worker"
 import { ReviewE } from "../entities/review.entity";
-import { Review } from "../database/models/review.model";
-import { Booking } from "../database/models/booking.model";
 const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 client.connect();
@@ -109,13 +107,15 @@ export class agent_booking_services {
             duration: `${booking.duration} Hrs`,
             distance: `${booking.distance} Kms`,
             driver: driver.name,
+            driver_contact : driver.phone,
             expected_fare: `INR ${booking.estimated_fare} `,
             agent_name: agent.name,
+            agent_contact: agent.phone,
             journey_status: "Scheduled",
             booking_status: "Accepted",
         };
 
-        Producer.sendToQueue(queueName, bookingData)
+        messageQueue.sendToQueue(queueName, bookingData)
         return
     }
 

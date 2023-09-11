@@ -8,6 +8,8 @@ function handleServerError(request, h, error) {
     return h.response({ message: error.message, errorCode: 'NOT_FOUND' }).code(404);
   } else if (error.output && error.output.statusCode === 401) {
     return h.response({ message: error.message, errorCode: 'UNAUTHORIZED' }).code(401);
+  } else if (error.output && error.output.statusCode === 429) {
+    return h.response({ message: 'Rate Limit Exceeded', errorCode: 'RATE_LIMIT_EXCEEDED' }).code(429);
   } else {
     return h.response({ message: 'Something went wrong', errorCode: 'INTERNAL_SERVER_ERROR' }).code(500);
   }

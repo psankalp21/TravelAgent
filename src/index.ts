@@ -15,8 +15,11 @@ import { Booking } from './database/models/booking.model';
 import { Category } from './database/models/category.model';
 import errorHandlingMiddleware from './middleware/errorhandle';
 import { startScheduler } from './utils/cron'
+import HapiRateLimitor from 'hapi-rate-limitor';
 import dotenv from 'dotenv';
 import path from 'path';
+import { messageQueue } from './utils/worker';
+
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 
@@ -25,6 +28,27 @@ const init = async () => {
     port: PORT,
     host: 'localhost',
   });
+
+  const rateLimiterOptions: HapiRateLimitor.Options = {
+    redis: {
+      port: 6379,
+      host: '127.0.0.1',
+    },
+    extensionPoint: 'onPreAuth',
+    namespace: 'hapi-rate-limitor',
+    max: 1,
+    duration: 3600000,
+    userAttribute: 'id',
+    userLimitAttribute: 'rateLimit',
+    enabled: true,
+    // ipWhitelist: ['127.0.0.1'], // List of IP addresses skipping rate limiting
+    getIp: async (request: Hapi.Request) => {
+      const ips = request.headers['x-forwarded-for']?.split(',');
+      return ips ? ips[ips.length - 1].trim() : request.info.remoteAddress;
+    },
+    emitter: null, 
+  };
+  
 
   await server.register([
     inert,
@@ -59,6 +83,10 @@ const init = async () => {
         register: errorHandlingMiddleware,
       },
     },
+    {
+      plugin: HapiRateLimitor,
+      options: rateLimiterOptions,
+    }
   ]);
 
   server.route(authroutes)
@@ -67,6 +95,8 @@ const init = async () => {
   await server.start();
   console.log('Server running on %s', server.info.uri);
   startScheduler();
+  await messageQueue.startConsumer();
+
 
 
   const keyFilePath = path.join(__dirname, '../../drive.json');
